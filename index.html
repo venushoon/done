@@ -3,15 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>다했어요! 보드 (Ultimate Edition)</title>
+<title>다했어요! 보드 (Ultimate Mac OS Edition)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
 
 <style>
-    /* ==========================================
-       CSS Variables & Reset
-    ========================================== */
     :root {
         --ink: #0f172a;
         --ink-light: #475569;
@@ -21,285 +18,145 @@
         --navy-light: #eff6ff;
         --accent: #e11d48;
         --success: #10b981;
-        --warning: #f59e0b;
         --border: #e2e8f0;
-        
-        --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
-        --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
         --shadow-lg: 0 15px 35px rgba(15, 23, 42, 0.08);
-        --shadow-xl: 0 25px 50px rgba(15, 23, 42, 0.15);
-        
-        --radius-sm: 8px;
-        --radius-md: 16px;
+        --shadow-dock: 0 20px 50px rgba(0, 0, 0, 0.15);
         --radius-lg: 24px;
+        --radius-md: 16px;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-    body, html {
-        margin: 0; padding: 0; height: 100%; overflow: hidden;
-        font-family: 'Pretendard', 'DM Sans', sans-serif;
-        background: var(--paper); color: var(--ink);
-        background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px;
-    }
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Pretendard', 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; }
 
     #app { display: flex; flex-direction: column; height: 100vh; position: relative; }
 
-    /* ==========================================
-       Header
-    ========================================== */
+    /* Header */
     header {
         display: flex; justify-content: space-between; align-items: center;
         padding: 16px 30px; background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
-        z-index: 50; flex-shrink: 0; height: 76px;
+        z-index: 50; flex-shrink: 0; height: 80px; position: relative;
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 12px; width: 300px; }
     .brand-icon { font-size: 2rem; }
     .brand-text h1 { margin: 0; font-size: 1.4rem; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
-    .brand-text p { margin: 0; font-size: 0.85rem; color: var(--ink-light); font-weight: 600; }
     
+    .header-right { width: 300px; display: flex; justify-content: flex-end; }
     .mode-toggle { display: flex; background: var(--paper); border-radius: 100px; padding: 4px; border: 1px solid var(--border); }
-    .mode-btn {
-        padding: 8px 20px; border: none; background: transparent; border-radius: 100px;
-        font-weight: 700; color: var(--ink-light); cursor: pointer; transition: 0.2s; font-size: 0.95rem;
+    .mode-btn { padding: 8px 20px; border: none; background: transparent; border-radius: 100px; font-weight: 700; color: var(--ink-light); cursor: pointer; transition: 0.2s; font-size: 0.95rem; }
+    .mode-btn.active { background: var(--surface); color: var(--navy); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+    /* Floating Timer */
+    #floating-timer {
+        position: absolute; z-index: 1000; top: 16px; left: 50%; transform: translateX(-50%);
+        background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 6px 16px; display: flex; align-items: center; gap: 16px;
     }
-    .mode-btn.active { background: var(--surface); color: var(--navy); box-shadow: var(--shadow-sm); }
+    .drag-handle { cursor: grab; color: #cbd5e1; font-size: 1.2rem; user-select: none; }
+    .time-display { font-family: 'DM Sans', sans-serif; font-size: 2rem; font-weight: 800; color: var(--ink); letter-spacing: -1px; cursor: pointer; }
 
-    /* ==========================================
-       USER VIEW (Student Board)
-    ========================================== */
-    #user-view { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
-
+    /* User View Area */
+    #user-view { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
     .board-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; width: 100%; }
     
+    /* 과제 보드: 액자형 가운데 정렬 및 공간 확보 */
     .task-container {
-        flex-grow: 1; padding: 30px; overflow-x: auto; overflow-y: hidden;
-        display: flex; gap: 24px; align-items: stretch; 
+        display: flex; gap: 24px; width: 100%; height: 100%;
+        padding: 40px 60px 240px 60px; /* 독바가 들어올 하단 공간 확보 */
+        overflow-x: auto; overflow-y: hidden;
+        align-items: stretch; justify-content: center;
     }
-    
-    .task-container::-webkit-scrollbar { height: 10px; }
-    .task-container::-webkit-scrollbar-track { background: transparent; }
-    .task-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid var(--paper); }
 
     .task-col {
-        flex: 1 1 300px; min-width: 300px; max-width: 700px;
-        background: rgba(255, 255, 255, 0.85); border: 2px solid var(--surface);
+        flex: 1 1 300px; min-width: 280px; max-width: 500px;
+        background: rgba(255, 255, 255, 0.9); border: 2px solid var(--surface);
         border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
-        display: flex; flex-direction: column; position: relative; 
-        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        display: flex; flex-direction: column; position: relative; transition: border-color 0.2s;
     }
-    .task-container[data-count="1"] .task-col { margin: 0 auto; }
+    .task-col.drag-over { border-color: var(--navy); box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
     
-    .task-col.drag-over { border-color: var(--navy); box-shadow: inset 0 0 0 2px var(--navy), var(--shadow-lg); background: var(--surface); }
-    
-    .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
-    .task-icon {
-        width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
-        font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); transition: all 0.3s ease;
-    }
-    .task-info { flex-grow: 1; }
-    .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; transition: all 0.3s ease; }
-    
-    .progress-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; transition: all 0.3s ease; }
-    .progress-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-    .progress-bg { fill: none; stroke: var(--paper); stroke-width: 4; }
-    .progress-fill { fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
-    .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); transition: all 0.3s ease; }
+    .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; }
+    .task-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; background: var(--navy-light); color: var(--navy); }
+    .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); }
 
-    /* Dynamic Scaling for 1-2 Tasks */
-    .task-container[data-count="1"] .task-icon { width: 76px; height: 76px; font-size: 3rem; border-radius: 20px; }
-    .task-container[data-count="1"] .task-title { font-size: 1.6rem; }
-    .task-container[data-count="1"] .progress-wrap { width: 64px; height: 64px; }
-    .task-container[data-count="1"] .progress-text { font-size: 1.1rem; }
-    .task-container[data-count="2"] .task-icon { width: 60px; height: 60px; font-size: 2.2rem; border-radius: 16px; }
-    .task-container[data-count="2"] .task-title { font-size: 1.3rem; }
-    .task-container[data-count="2"] .progress-wrap { width: 52px; height: 52px; }
-    .task-container[data-count="2"] .progress-text { font-size: 0.9rem; }
-
+    /* 15인 공간 확보 그리드 */
     .task-body {
-        padding: 24px; flex-grow: 1; overflow-y: auto;
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; align-content: start;
+        padding: 20px; flex-grow: 1; overflow-y: auto;
+        display: grid; grid-template-columns: repeat(3, 1fr); 
+        grid-auto-rows: 75px; 
+        min-height: 450px; /* 학생이 없어도 15인 자리를 지키도록 최소 높이 확보 */
+        gap: 12px; align-content: start;
     }
-    
+
     .done-chip {
         background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
-        padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+        padding: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
         box-shadow: var(--shadow-sm); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        cursor: pointer; position: relative; overflow: hidden;
+        cursor: pointer; position: relative; height: 75px;
     }
-    .done-chip:hover::after {
-        content: '✕ 취소'; position: absolute; inset: 0; background: rgba(225, 29, 72, 0.9); color: white;
-        display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; animation: fadeIn 0.2s;
-    }
-    .done-emoji { font-size: 1.6rem; }
-    .done-name { font-size: 0.85rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
+    .done-chip:hover::after { content: '✕ 취소'; position: absolute; inset: 0; background: rgba(225, 29, 72, 0.9); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; border-radius: var(--radius-md); }
 
     /* ==========================================
-       FLOATING STUDENT ROSTER (Mac OS Dock Style)
+       Mac OS Dock (Floating & Snapping)
     ========================================== */
     #floating-roster {
         position: fixed; z-index: 900;
-        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
-        border: 1px solid var(--border); border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-xl); display: flex; overflow: hidden;
+        background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px);
+        border: 1px solid rgba(255,255,255,0.6); box-shadow: var(--shadow-dock);
+        display: flex; flex-direction: column;
+        transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s, border-radius 0.4s;
     }
-    
+    #floating-roster.dragging { transition: none !important; opacity: 0.8; }
+
     .roster-header {
-        background: var(--surface); display: flex; align-items: center; justify-content: space-between;
-        cursor: grab; user-select: none; touch-action: none;
+        background: rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center;
+        cursor: grab; padding: 10px 15px; border-radius: 20px 20px 0 0;
     }
-    .roster-header:active { cursor: grabbing; background: var(--paper); }
-    .roster-title-area { display: flex; align-items: center; gap: 8px; }
-    .roster-title { font-weight: 800; color: var(--navy); margin: 0; font-size: 1rem; }
-    .roster-count { font-size: 0.75rem; color: var(--navy); font-weight: 700; background: var(--navy-light); padding: 4px 10px; border-radius: 100px; }
-    .roster-controls { display: flex; gap: 8px; }
-    .roster-btn { width: 28px; height: 28px; border: none; background: var(--paper); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-light); font-weight: bold; font-size: 1rem; transition: 0.2s; }
-    .roster-btn:hover { background: var(--border); color: var(--ink); }
+    .dock-container { padding: 12px; display: flex; gap: 10px; }
 
-    /* Vertical (1 Column) - Left / Right */
-    #floating-roster[data-layout="vertical"] { flex-direction: column; width: 170px; max-height: 75vh; }
-    #floating-roster[data-layout="vertical"] .roster-header { padding: 16px 15px; border-bottom: 1px solid var(--border); }
-    #floating-roster[data-layout="vertical"] .roster-title-area { flex-direction: column; align-items: flex-start; gap: 4px; }
-    #floating-roster[data-layout="vertical"] .dock-container { display: grid; grid-template-columns: 1fr; padding: 15px; gap: 10px; overflow-y: auto; overflow-x: hidden; }
-
-    /* Horizontal (1 Row) - Bottom */
-    #floating-roster[data-layout="horizontal"] { flex-direction: column; width: 90vw; max-width: 1200px; height: auto; }
-    #floating-roster[data-layout="horizontal"] .roster-header { padding: 10px 20px; border-bottom: 1px solid var(--border); flex-direction: row; }
-    #floating-roster[data-layout="horizontal"] .roster-title-area { flex-direction: row; align-items: center; }
-    #floating-roster[data-layout="horizontal"] .dock-container { display: flex; flex-direction: row; padding: 12px 15px; gap: 10px; overflow-x: auto; overflow-y: hidden; align-items: center; }
-    #floating-roster[data-layout="horizontal"] .draggable-chip { flex-shrink: 0; margin-bottom: 0; }
-
-    .dock-container::-webkit-scrollbar { width: 6px; height: 6px; }
-    .dock-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-    .draggable-chip {
-        background: var(--surface); border: 1px solid var(--border); border-radius: 12px; 
-        padding: 10px 14px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; 
-        cursor: grab; user-select: none; touch-action: none; transition: background 0.2s, box-shadow 0.2s;
-        box-shadow: var(--shadow-sm);
+    /* 스마트 레이아웃: 위치에 따라 2행/2열로 자동 변환 */
+    #floating-roster[data-position="bottom"] {
+        left: 50%; bottom: 20px; transform: translateX(-50%); border-radius: 24px; max-width: 95vw;
     }
-    .draggable-chip:hover { background: var(--navy-light); border-color: var(--navy); }
-    .draggable-chip:active { cursor: grabbing; opacity: 0.5; }
+    #floating-roster[data-position="bottom"] .dock-container { flex-direction: row; flex-wrap: wrap; justify-content: center; max-height: 200px; overflow-y: auto; }
 
-    .ghost-chip {
-        position: fixed; pointer-events: none; z-index: 9999;
-        background: var(--surface); border: 2px solid var(--navy); border-radius: 12px;
-        padding: 12px 20px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem;
-        box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.05);
-    }
+    #floating-roster[data-position="left"] { left: 20px; top: 50%; transform: translateY(-50%); border-radius: 24px; width: auto; max-width: 400px; }
+    #floating-roster[data-position="left"] .dock-container { flex-direction: row; flex-wrap: wrap; align-content: flex-start; max-height: 80vh; }
 
-    /* ==========================================
-       FLOATING TIMER
-    ========================================== */
-    #floating-timer {
-        position: fixed; z-index: 1000;
-        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 100px;
-        box-shadow: var(--shadow-md); padding: 6px 16px 6px 10px;
-        display: flex; align-items: center; gap: 16px;
+    #floating-roster[data-position="right"] { right: 20px; top: 50%; transform: translateY(-50%); border-radius: 24px; width: auto; max-width: 400px; }
+    #floating-roster[data-position="right"] .dock-container { flex-direction: row; flex-wrap: wrap; align-content: flex-start; justify-content: flex-end; max-height: 80vh; }
+
+    .dock-chip {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+        padding: 8px 12px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        font-weight: 700; font-size: 0.85rem; cursor: grab; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: var(--shadow-sm); min-width: 75px; flex-shrink: 0;
     }
-    .drag-handle { cursor: grab; padding: 10px; color: var(--ink-light); font-size: 1.2rem; line-height: 0.5; user-select: none; touch-action: none;}
-    .drag-handle:active { cursor: grabbing; color: var(--navy); }
+    .dock-chip:hover { transform: scale(1.2) translateY(-8px); z-index: 10; border-color: var(--navy); }
     
-    .time-display { font-family: 'DM Sans', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--ink); letter-spacing: -1px; font-variant-numeric: tabular-nums; cursor: pointer; }
-    .time-display.warning { color: var(--accent); animation: pulse 1s infinite; }
-    
-    .timer-controls { display: flex; gap: 6px; align-items: center; }
-    .timer-btn { width: 36px; height: 36px; border: none; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: var(--ink-light); transition: 0.2s; }
-    .timer-btn:hover { background: var(--border); color: var(--ink); }
-    .play-pause-btn { width: 44px; height: 44px; background: var(--navy); color: white; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3); }
-    .play-pause-btn:hover { background: #172554; }
-    .play-pause-btn svg { width: 18px; height: 18px; fill: currentColor; }
+    .ghost-chip { position: fixed; pointer-events: none; z-index: 9999; background: var(--surface); border: 2px solid var(--navy); border-radius: 12px; padding: 10px 15px; display: flex; align-items: center; gap: 8px; font-weight: 700; box-shadow: var(--shadow-lg); transform: translate(-50%, -50%); }
 
-    /* ==========================================
-       ADMIN VIEW
-    ========================================== */
-    #admin-view { flex-grow: 1; display: none; background: var(--paper); overflow: hidden; }
-    .admin-container { display: flex; height: 100%; width: 100%; max-width: 1600px; margin: 0 auto; }
-    
-    .admin-sidebar {
-        width: 260px; background: var(--surface); border-right: 1px solid var(--border);
-        padding: 20px 0; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0;
-    }
-    .admin-tab-btn {
-        padding: 16px 24px; text-align: left; background: transparent; border: none; font-size: 1.05rem;
-        font-weight: 700; color: var(--ink-light); cursor: pointer; transition: 0.2s;
-        border-left: 4px solid transparent; display: flex; align-items: center; gap: 10px;
-    }
-    .admin-tab-btn:hover { background: var(--paper); color: var(--ink); }
-    .admin-tab-btn.active { background: var(--navy-light); color: var(--navy); border-left-color: var(--navy); }
-    
+    /* Admin View */
+    #admin-view { flex-grow: 1; display: none; background: #f8fafc; overflow: hidden; }
+    .admin-container { display: flex; height: 100%; max-width: 1400px; margin: 0 auto; }
+    .admin-sidebar { width: 260px; background: white; border-right: 1px solid var(--border); padding: 30px 0; display: flex; flex-direction: column; }
+    .admin-tab { padding: 16px 30px; border: none; background: none; text-align: left; font-weight: 800; color: var(--ink-light); cursor: pointer; border-left: 4px solid transparent; }
+    .admin-tab.active { background: var(--navy-light); color: var(--navy); border-left-color: var(--navy); }
     .admin-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
-    .tab-pane { display: none; animation: fadeIn 0.3s; max-width: 1000px; }
-    .tab-pane.active { display: block; }
-    
-    .panel-title { font-size: 1.4rem; font-weight: 800; color: var(--navy); margin: 0 0 24px 0; display: flex; justify-content: space-between; align-items: center; }
+    .admin-card { background: white; border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 24px; }
 
-    .admin-card { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 24px; }
-    .task-edit-item { display: flex; gap: 10px; align-items: center; background: var(--paper); padding: 12px; border-radius: var(--radius-md); margin-bottom: 8px; }
-    .icon-input { width: 50px; text-align: center; font-size: 1.5rem; }
-    .text-input { flex-grow: 1; border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); outline: none; font-size: 0.95rem; font-family: inherit; }
-    .text-input:focus { border-color: var(--navy); }
-    .btn-primary { background: var(--navy); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; white-space: nowrap; }
-    .btn-primary:hover { background: #172554; }
-    .btn-danger-sm { background: #ffe4e6; color: var(--accent); border: none; width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; }
+    /* Emoji Picker */
+    .emoji-popup { position: absolute; bottom: 60px; left: 0; background: white; border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); display: none; grid-template-columns: repeat(5, 1fr); gap: 5px; padding: 10px; z-index: 100; }
+    .emoji-popup.show { display: grid; }
+    .emoji-item { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px; }
+    .emoji-item:hover { background: var(--navy-light); }
 
-    /* Emoji Picker Styles */
-    .emoji-picker-container { position: relative; display: flex; align-items: stretch; }
-    .emoji-selector-btn {
-        width: 60px; border: 1px solid var(--border); border-radius: var(--radius-sm);
-        background: var(--surface); font-size: 1.5rem; cursor: pointer; display: flex;
-        align-items: center; justify-content: center; transition: border-color 0.2s;
-    }
-    .emoji-selector-btn:hover { border-color: var(--navy); }
-    .emoji-picker {
-        position: absolute; bottom: calc(100% + 10px); left: 0;
-        background: var(--surface); border: 1px solid var(--border);
-        border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
-        padding: 12px; display: none; grid-template-columns: repeat(5, 1fr);
-        gap: 6px; z-index: 100;
-    }
-    .emoji-picker.show { display: grid; animation: fadeIn 0.2s; }
-    .emoji-option {
-        width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
-        font-size: 1.5rem; cursor: pointer; border-radius: 8px; transition: background 0.2s;
-    }
-    .emoji-option:hover { background: var(--paper); }
-
-    .insight-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 24px; }
-    .insight-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
-    .insight-header { background: var(--paper); padding: 16px 20px; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid var(--border); }
-    .status-section { padding: 16px 20px; border-bottom: 1px dashed var(--border); }
-    .status-section:last-child { border-bottom: none; }
-    .status-title { font-size: 0.9rem; font-weight: 800; color: var(--ink-light); margin-bottom: 10px; }
-    .chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip { padding: 6px 12px; border-radius: 100px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
-    .chip.done { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-    .chip.missing { background: #fff1f2; color: var(--accent); border: 1px solid #fecdd3; }
-
-    .student-record-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
-    .student-record-table th, .student-record-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
-    .student-record-table th { background: var(--paper); font-weight: 800; color: var(--ink-light); }
-    .student-record-table tr:last-child td { border-bottom: none; }
-    
-    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; margin: 0 6px 6px 0; border: 1px solid transparent; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; margin: 0 6px 6px 0; border: 1px solid transparent; font-weight: 700; }
     .badge.done { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
-    .badge.missing { background: var(--paper); color: var(--ink-light); border-color: var(--border); opacity: 0.75; }
+    .badge.missing { background: #f1f5f9; color: var(--ink-light); border-color: var(--border); opacity: 0.7; }
 
     @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-    @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    
-    .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 10; border-radius: var(--radius-lg); }
-
-    @media (max-width: 768px) {
-        header { flex-direction: column; gap: 15px; padding: 15px; height: auto; }
-        .admin-container { flex-direction: column; }
-        .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; overflow-x: auto; padding: 0; }
-        .admin-tab-btn { border-left: none; border-bottom: 4px solid transparent; white-space: nowrap; }
-        .admin-tab-btn.active { border-left-color: transparent; border-bottom-color: var(--navy); }
-        .task-col { flex: 0 0 260px; min-width: 260px; }
-    }
+    .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
 </style>
 </head>
 <body>
@@ -308,10 +165,7 @@
     <header>
         <div class="brand">
             <div class="brand-icon">🎯</div>
-            <div class="brand-text">
-                <h1>다했어요! 보드</h1>
-                <p>스스로 체크하는 우리 반 과제 관리</p>
-            </div>
+            <div class="brand-text"><h1>다했어요! 보드</h1></div>
         </div>
         <div class="mode-toggle">
             <button class="mode-btn active" onclick="switchMode('user')" id="btn-user">🎓 학생 보드</button>
@@ -319,624 +173,288 @@
         </div>
     </header>
 
-    <div id="floating-timer" style="top: 10px; left: 50%; transform: translateX(-50%);">
-        <div class="drag-handle" id="timer-drag-handle" title="드래그하여 이동">⋮⋮</div>
-        <div class="time-display" id="timeDisplay" onclick="setTimeManually()" title="클릭하여 시간 설정">20:00</div>
+    <div id="floating-timer">
+        <div class="drag-handle" id="timer-handle">⋮⋮</div>
+        <div class="time-display" id="timeDisplay" onclick="setTimeManually()">20:00</div>
         <div class="timer-controls">
-            <button class="timer-btn" onclick="adjustTime(-1)">-1</button>
-            <button class="timer-btn play-pause-btn" id="playBtn" onclick="toggleTimer()">
-                <svg id="icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                <svg id="icon-pause" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-            </button>
-            <button class="timer-btn" onclick="resetTimer()" title="초기화">↺</button>
-            <button class="timer-btn" onclick="adjustTime(1)">+1</button>
+            <button style="border:none; background:none; cursor:pointer;" onclick="adjustTime(-1)">-1</button>
+            <button style="border:none; background:var(--navy); color:white; border-radius:50%; width:30px; height:30px; cursor:pointer;" id="playBtn" onclick="toggleTimer()">▶</button>
+            <button style="border:none; background:none; cursor:pointer;" onclick="resetTimer()">↺</button>
+            <button style="border:none; background:none; cursor:pointer;" onclick="adjustTime(1)">+1</button>
         </div>
-    </div>
-
-    <div id="floating-roster" data-layout="vertical" style="left: 30px; top: 100px;">
-        <div class="roster-header" id="roster-drag-handle">
-            <div class="roster-title-area">
-                <span class="roster-title">👇 이름표</span>
-                <span class="roster-count" id="totalStudentsCount">0명</span>
-            </div>
-            <div class="roster-controls">
-                <button class="roster-btn" onclick="toggleRoster()" id="toggleRosterBtn" title="최소화/최대화">−</button>
-            </div>
-        </div>
-        <div class="dock-container" id="studentDock"></div>
     </div>
 
     <div id="user-view">
-        <div class="board-main">
-            <div class="task-container" id="taskGrid"></div>
+        <div class="board-main"><div class="task-container" id="taskGrid"></div></div>
+        
+        <div id="floating-roster" data-position="bottom">
+            <div class="roster-header" id="roster-handle">
+                <span style="font-weight:800; color:var(--navy);">⋮⋮ 내 이름표 던지기</span>
+                <span id="totalCount" style="font-size:0.8rem; background:var(--navy); color:white; padding:2px 8px; border-radius:10px;">0명</span>
+            </div>
+            <div class="dock-container" id="studentDock"></div>
         </div>
     </div>
 
     <div id="admin-view">
         <div class="admin-container">
             <aside class="admin-sidebar">
-                <button class="admin-tab-btn active" onclick="switchAdminTab('tab-settings', this)">📝 과제 및 명단 설정</button>
-                <button class="admin-tab-btn" onclick="switchAdminTab('tab-overview', this)">👀 한눈에 보기</button>
-                <button class="admin-tab-btn" onclick="switchAdminTab('tab-bystudent', this)">🧑‍🎓 학생별 보기</button>
+                <button class="admin-tab active" onclick="switchTab('tab-set', this)">📝 과제 및 명단</button>
+                <button class="admin-tab" onclick="switchTab('tab-view', this)">👀 현황 보기</button>
+                <button class="admin-tab" onclick="switchTab('tab-stat', this)">🧑‍🎓 학생별 보기</button>
             </aside>
-            
             <main class="admin-content">
-                <div id="tab-settings" class="tab-pane active">
-                    <h2 class="panel-title">과제 및 명단 설정 <button class="btn-primary" onclick="resetAllCompletions()" style="background:var(--accent); font-size:0.9rem;">전체 제출기록 초기화</button></h2>
-                    
+                <div id="tab-set" class="tab-pane active">
                     <div class="admin-card">
-                        <h3 style="margin-top:0; color:var(--ink-light);">1. 과제 목록 관리 (최대 6개)</h3>
-                        <div id="adminTaskList" style="margin-bottom: 15px;"></div>
-                        
-                        <div style="display:flex; gap:10px; align-items: stretch; position: relative;">
-                            <div class="emoji-picker-container">
-                                <button class="emoji-selector-btn" id="emojiSelectorBtn" onclick="toggleEmojiPicker()">📝</button>
-                                <div class="emoji-picker" id="emojiPicker"></div>
-                            </div>
-                            <input type="text" id="newTaskTitle" class="text-input" placeholder="새로운 과제 이름 입력" onkeypress="if(event.key==='Enter') addTask()">
-                            <button class="btn-primary" onclick="addTask()">과제 추가</button>
+                        <h3>과제 관리</h3>
+                        <div id="adminTaskList"></div>
+                        <div style="display:flex; gap:10px; margin-top:15px; position:relative;">
+                            <button onclick="toggleEmojiPopup()" id="taskEmojiBtn" style="width:50px; height:50px; border:1px solid var(--border); background:white; font-size:1.5rem; cursor:pointer;">📚</button>
+                            <div class="emoji-popup" id="emojiPopup"></div>
+                            <input type="text" id="taskT" style="flex:1; padding:10px; border:1px solid var(--border); border-radius:8px;" placeholder="과제 제목">
+                            <button onclick="addTask()" style="background:var(--navy); color:white; border:none; padding:0 20px; border-radius:8px; cursor:pointer;">추가</button>
                         </div>
                     </div>
-
                     <div class="admin-card">
-                        <h3 style="margin-top:0; color:var(--ink-light);">2. 학생 명단 관리</h3>
-                        <div style="display:flex; gap:10px; margin-bottom: 15px;">
-                            <input type="text" id="newStudentName" class="text-input" placeholder="학생 이름 입력" onkeypress="if(event.key==='Enter') addStudent()">
-                            <button class="btn-primary" onclick="addStudent()">학생 추가</button>
+                        <h3>학생 관리</h3>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="stuN" style="flex:1; padding:10px; border:1px solid var(--border); border-radius:8px;" placeholder="이름 입력">
+                            <button onclick="addStudent()" style="background:var(--navy); color:white; border:none; padding:0 20px; border-radius:8px; cursor:pointer;">추가</button>
                         </div>
-                        <div style="display:flex; flex-wrap:wrap; gap:8px;" id="adminStudentList"></div>
+                        <div id="adminStudentList" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:15px;"></div>
                     </div>
                 </div>
-
-                <div id="tab-overview" class="tab-pane">
-                    <h2 class="panel-title">한눈에 보기 (제출 현황) <button class="btn-primary" onclick="renderAdminOverview()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
-                    <div class="insight-grid" id="adminOverviewContent"></div>
-                </div>
-
-                <div id="tab-bystudent" class="tab-pane">
-                    <h2 class="panel-title">학생별 기록 확인 <button class="btn-primary" onclick="renderAdminByStudent()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
-                    <table class="student-record-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 180px;">학생 이름</th>
-                                <th>과제 달성 현황</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminByStudentContent"></tbody>
-                    </table>
-                </div>
+                <div id="tab-view" class="tab-pane"><div id="adminInsight"></div></div>
+                <div id="tab-stat" class="tab-pane"><table style="width:100%; border-collapse:collapse;" id="adminStatTable"><thead><tr><th>학생</th><th>현황</th></tr></thead><tbody id="adminStatContent"></tbody></table></div>
             </main>
         </div>
     </div>
 </div>
 
 <script>
-    /* ==========================================
-       사운드 엔진 
-    ========================================== */
-    let audioCtx;
-    function playSound(type) {
-        try {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
-
-            if (type === 'drop') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1500, now + 0.1);
-                gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'delete') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
-                gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'error') {
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.setValueAtTime(150, now+0.1);
-                gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now+0.2);
-                osc.start(now); osc.stop(now+0.2);
-            }
-        } catch(e) {}
-    }
-
-    /* ==========================================
-       데이터 상태 설정
-    ========================================== */
-    const EMOJIS = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐢","🐸","🐵","🐧","🐥","🐬","🦔","🦉"];
-    const TASK_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
-    const TASK_EMOJIS = ["📝", "📖", "🥛", "🧹", "🎨", "🏃‍♂️", "🎵", "🗣️", "💡", "💯", "🍎", "⏰", "🗑️", "🧽", "🪴", "🧩", "⚽", "🍽️", "💻", "🔬", "🖍️", "🎒", "🚌", "🪥", "🦷"];
-
-    let students = JSON.parse(localStorage.getItem('db_students_v3')) || ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우"];
-    let tasks = JSON.parse(localStorage.getItem('db_tasks_v3')) || [
-        { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
-        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] },
-        { id: 't3', title: '수학 익힘책 12쪽', icon: '✏️', color: TASK_COLORS[2] }
+    const EMOJIS = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐢","🐸","🐵","🐧","🐥","🐬","🦄","🐿️"];
+    const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
+    const TASK_EMOJIS = ["📝", "📖", "🥛", "🧹", "🎨", "⚽", "🏃‍♂️", "🎵", "💡", "🎒", "🪥", "🦷", "💻"];
+    
+    let students = JSON.parse(localStorage.getItem('db_stu_v7')) || ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우","윤지호","박수아","이도현"];
+    let tasks = JSON.parse(localStorage.getItem('db_tsk_v7')) || [
+        { id: 't1', title: '아침 독서 기록장', icon: '📖', color: "#3b82f6" },
+        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: "#10b981" }
     ];
-    let completions = JSON.parse(localStorage.getItem('db_completions_v3')) || {};
+    let completions = JSON.parse(localStorage.getItem('db_cmp_v7')) || {};
 
     function saveData() {
-        localStorage.setItem('db_students_v3', JSON.stringify(students));
-        localStorage.setItem('db_tasks_v3', JSON.stringify(tasks));
-        localStorage.setItem('db_completions_v3', JSON.stringify(completions));
+        localStorage.setItem('db_stu_v7', JSON.stringify(students));
+        localStorage.setItem('db_tsk_v7', JSON.stringify(tasks));
+        localStorage.setItem('db_cmp_v7', JSON.stringify(completions));
     }
-    function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
 
-    /* ==========================================
-       초기화
-    ========================================== */
     function init() {
-        tasks.forEach(t => { if (!completions[t.id]) completions[t.id] = []; });
-        for (let tid in completions) { completions[tid] = completions[tid].filter(s => students.includes(s)); }
-        
+        tasks.forEach(t => { if(!completions[t.id]) completions[t.id] = []; });
         renderUserView();
-        initFloatingTimer();
-        initFloatingRoster(); 
-        initEmojiPicker(); 
-        
-        const board = document.getElementById('taskGrid');
-        board.addEventListener('wheel', (e) => { 
-            if (e.deltaY !== 0) { e.preventDefault(); board.scrollLeft += e.deltaY; } 
-        });
-        
-        document.body.addEventListener('click', () => { try{ if(audioCtx) audioCtx.resume(); }catch(e){} }, {once: true});
+        setupDraggable('floating-timer', 'timer-handle');
+        setupRosterDraggable();
+        initEmojiPopup();
     }
 
-    function switchMode(mode) {
-        const floatingRoster = document.getElementById('floating-roster');
-        
-        if(mode === 'admin') {
-            const pwd = prompt("관리자 암호를 입력하세요 (기본: 0000)");
-            if (pwd !== '0000') { alert("암호가 틀렸습니다."); return; }
-            document.getElementById('user-view').style.display = 'none';
-            document.getElementById('admin-view').style.display = 'flex';
-            document.getElementById('btn-user').classList.remove('active');
-            document.getElementById('btn-admin').classList.add('active');
-            floatingRoster.style.display = 'none'; 
-            renderAdminTasks(); renderAdminStudents(); renderAdminOverview(); renderAdminByStudent();
-        } else {
-            document.getElementById('user-view').style.display = 'flex';
-            document.getElementById('admin-view').style.display = 'none';
-            document.getElementById('btn-user').classList.add('active');
-            document.getElementById('btn-admin').classList.remove('active');
-            floatingRoster.style.display = 'flex'; 
-            renderUserView();
-        }
-    }
-
-    function switchAdminTab(tabId, btnEl) {
-        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        btnEl.classList.add('active');
-        
-        if(tabId === 'tab-overview') renderAdminOverview();
-        if(tabId === 'tab-bystudent') renderAdminByStudent();
-    }
-
-    /* ==========================================
-       이모지 픽커 
-    ========================================== */
-    function initEmojiPicker() {
-        const picker = document.getElementById('emojiPicker');
-        picker.innerHTML = TASK_EMOJIS.map(e => `<div class="emoji-option" onclick="selectEmoji('${e}')">${e}</div>`).join('');
-        
-        document.addEventListener('click', (e) => {
-            const container = e.target.closest('.emoji-picker-container');
-            if(!container) {
-                const pickerEl = document.getElementById('emojiPicker');
-                if(pickerEl && pickerEl.classList.contains('show')) { pickerEl.classList.remove('show'); }
-            }
-        });
-    }
-    function toggleEmojiPicker() { document.getElementById('emojiPicker').classList.toggle('show'); }
-    function selectEmoji(emoji) { document.getElementById('emojiSelectorBtn').textContent = emoji; document.getElementById('emojiPicker').classList.remove('show'); }
-
-    /* ==========================================
-       USER VIEW 렌더링
-    ========================================== */
     function renderUserView() {
         const grid = document.getElementById('taskGrid');
-        grid.setAttribute('data-count', tasks.length); 
+        grid.setAttribute('data-count', tasks.length);
         grid.innerHTML = '';
-
         tasks.forEach(task => {
-            const completedCount = completions[task.id].length;
-            const totalCount = students.length;
-            const pct = totalCount ? (completedCount / totalCount) : 0;
-            const dashArray = 2 * Math.PI * 18;
-
             const col = document.createElement('div');
             col.className = 'task-col';
-            col.id = `task-col-${task.id}`;
-            col.setAttribute('data-task-id', task.id);
-
+            col.dataset.id = task.id;
+            const done = completions[task.id] || [];
+            const pct = students.length ? (done.length / students.length) : 0;
             col.innerHTML = `
                 <div class="task-header">
-                    <div class="task-icon" style="background:${task.color}15; color:${task.color}">${task.icon}</div>
-                    <div class="task-info">
-                        <h3 class="task-title">${task.title}</h3>
-                    </div>
-                    <div class="progress-wrap">
-                        <svg class="progress-svg" viewBox="0 0 44 44">
-                            <circle class="progress-bg" cx="22" cy="22" r="18"></circle>
-                            <circle class="progress-fill" cx="22" cy="22" r="18" stroke="${task.color}" stroke-dasharray="${dashArray}" stroke-dashoffset="${dashArray * (1 - pct)}"></circle>
-                        </svg>
-                        <div class="progress-text">${completedCount}</div>
+                    <div class="task-icon">${task.icon}</div>
+                    <div class="task-info"><h3 class="task-title">${task.title}</h3></div>
+                    <div class="progress-wrap" style="position:relative; width:42px; height:42px;">
+                        <svg width="42" height="42" style="transform:rotate(-90deg)"><circle cx="21" cy="21" r="18" fill="none" stroke="#eee" stroke-width="4"/><circle cx="21" cy="21" r="18" fill="none" stroke="${task.color}" stroke-width="4" stroke-dasharray="113.1" stroke-dashoffset="${113.1*(1-pct)}" stroke-linecap="round"/></svg>
+                        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800">${done.length}</div>
                     </div>
                 </div>
-                <div class="task-body" id="task-body-${task.id}">
-                    ${completions[task.id].map(name => {
-                        const sIdx = students.indexOf(name);
-                        return `<div class="done-chip" onclick="removeCompletion('${task.id}', '${name}')">
-                            <span class="done-emoji">${getEmoji(sIdx)}</span>
-                            <span class="done-name">${name}</span>
-                        </div>`;
-                    }).join('')}
+                <div class="task-body">
+                    ${done.map(name => `
+                        <div class="done-chip" onclick="removeDone('${task.id}','${name}')">
+                            <span style="font-size:1.5rem">${EMOJIS[students.indexOf(name)%EMOJIS.length]}</span>
+                            <span style="font-size:0.8rem; font-weight:700">${name}</span>
+                        </div>
+                    `).join('')}
                 </div>
-                <canvas class="confetti-canvas" id="canvas-${task.id}"></canvas>
+                <canvas class="confetti-canvas" id="cf-${task.id}"></canvas>
             `;
             grid.appendChild(col);
         });
-
         renderDock();
     }
 
     function renderDock() {
         const dock = document.getElementById('studentDock');
         dock.innerHTML = '';
-        document.getElementById('totalStudentsCount').textContent = `${students.length}명`;
-
-        students.forEach((name, idx) => {
+        document.getElementById('totalCount').textContent = students.length + '명';
+        students.forEach((name, i) => {
             const chip = document.createElement('div');
-            chip.className = 'draggable-chip';
-            chip.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
-            chip.addEventListener('pointerdown', (e) => startDrag(e, name, idx, chip));
+            chip.className = 'dock-chip';
+            chip.innerHTML = `<span style="font-size:1.8rem">${EMOJIS[i%EMOJIS.length]}</span><span>${name}</span>`;
+            chip.onpointerdown = (e) => startDragStudent(e, name, i);
             dock.appendChild(chip);
         });
     }
 
-    /* ==========================================
-       플로팅 명단 기능 (Mac OS Dock Style)
-    ========================================== */
-    function initFloatingRoster() {
-        const rosterEl = document.getElementById('floating-roster');
-        const handle = document.getElementById('roster-drag-handle');
-        let isDragging = false, offsetX, offsetY;
+    function setupRosterDraggable() {
+        const el = document.getElementById('floating-roster');
+        const handle = document.getElementById('roster-handle');
+        let isDragging = false, ox, oy;
 
-        handle.addEventListener('pointerdown', (e) => {
-            if(e.target.tagName.toLowerCase() === 'button') return; 
-            isDragging = true;
-            
-            rosterEl.style.transition = 'none';
-            const rect = rosterEl.getBoundingClientRect();
-            rosterEl.style.left = rect.left + 'px';
-            rosterEl.style.top = rect.top + 'px';
-            
-            offsetX = e.clientX - rect.left; 
-            offsetY = e.clientY - rect.top;
-            
-            document.addEventListener('pointermove', onMove, {passive: false});
-            document.addEventListener('pointerup', onUp);
-        });
+        handle.onpointerdown = (e) => {
+            isDragging = true; el.classList.add('dragging');
+            const rect = el.getBoundingClientRect();
+            el.style.left = rect.left + 'px'; el.style.top = rect.top + 'px';
+            el.style.transform = 'none'; el.style.bottom = 'auto'; el.style.right = 'auto';
+            ox = e.clientX - rect.left; oy = e.clientY - rect.top;
 
-        function onMove(e) {
-            if(!isDragging) return;
-            e.preventDefault();
-            rosterEl.style.left = (e.clientX - offsetX) + 'px';
-            rosterEl.style.top = (e.clientY - offsetY) + 'px';
-            
-            const wh = window.innerHeight;
-            const currentLayout = rosterEl.getAttribute('data-layout');
-            
-            if (e.clientY > wh * 0.7 && currentLayout !== 'horizontal') {
-                rosterEl.setAttribute('data-layout', 'horizontal');
-                const newRect = rosterEl.getBoundingClientRect();
-                offsetX = e.clientX - newRect.left; offsetY = e.clientY - newRect.top; 
-            } 
-            else if (e.clientY <= wh * 0.7 && currentLayout !== 'vertical') {
-                rosterEl.setAttribute('data-layout', 'vertical');
-                const newRect = rosterEl.getBoundingClientRect();
-                offsetX = e.clientX - newRect.left; offsetY = e.clientY - newRect.top; 
-            }
-        }
-        
-        function onUp(e) { 
-            isDragging = false; 
-            document.removeEventListener('pointermove', onMove); 
-            document.removeEventListener('pointerup', onUp); 
-            
-            rosterEl.style.transition = 'left 0.3s ease, top 0.3s ease';
-            const ww = window.innerWidth; const wh = window.innerHeight;
-            const rect = rosterEl.getBoundingClientRect();
-            const layout = rosterEl.getAttribute('data-layout');
-            
-            if (layout === 'horizontal') {
-                rosterEl.style.top = (wh - rect.height - 20) + 'px';
-                rosterEl.style.left = Math.max(20, Math.min(rect.left, ww - rect.width - 20)) + 'px';
-            } else {
-                if (rect.left + rect.width / 2 < ww / 2) rosterEl.style.left = '20px';
-                else rosterEl.style.left = (ww - rect.width - 20) + 'px';
-                rosterEl.style.top = Math.max(80, Math.min(rect.top, wh - rect.height - 20)) + 'px';
-            }
-            
-            setTimeout(() => { rosterEl.style.transition = 'none'; }, 300);
-        }
+            const move = (ev) => {
+                if(!isDragging) return;
+                el.style.left = (ev.clientX - ox) + 'px';
+                el.style.top = (ev.clientY - oy) + 'px';
+            };
+
+            const up = (ev) => {
+                isDragging = false; el.classList.remove('dragging');
+                const ww = window.innerWidth, wh = window.innerHeight;
+                const cx = ev.clientX, cy = ev.clientY;
+                if (cy > wh * 0.7) el.dataset.position = "bottom";
+                else if (cx < ww * 0.4) el.dataset.position = "left";
+                else if (cx > ww * 0.6) el.dataset.position = "right";
+                else el.dataset.position = "bottom";
+                el.style.left = ''; el.style.top = ''; el.style.transform = '';
+                document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
+            };
+            document.addEventListener('pointermove', move);
+            document.addEventListener('pointerup', up);
+        };
     }
 
-    function toggleRoster() {
-        const dock = document.getElementById('studentDock');
-        const btn = document.getElementById('toggleRosterBtn');
-        if(dock.style.display === 'none') { dock.style.display = ''; btn.textContent = '−'; } 
-        else { dock.style.display = 'none'; btn.textContent = '＋'; }
-    }
-
-    /* ==========================================
-       드래그 앤 드롭 구현
-    ========================================== */
-    let ghost = null, dragStudentName = null, currentHoverCol = null;
-
-    function startDrag(e, name, idx, sourceEl) {
-        e.preventDefault(); dragStudentName = name;
-        
+    let ghost, dragName;
+    function startDragStudent(e, name, idx) {
+        e.preventDefault(); dragName = name;
         ghost = document.createElement('div');
         ghost.className = 'ghost-chip';
-        ghost.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
+        ghost.innerHTML = `<span>${EMOJIS[idx%EMOJIS.length]}</span><span>${name}</span>`;
         document.body.appendChild(ghost);
-        
-        moveGhost(e);
-        document.addEventListener('pointermove', onDragMove, {passive: false});
-        document.addEventListener('pointerup', onDragEnd);
-    }
-
-    function moveGhost(e) {
-        if(!ghost) return;
-        const x = e.clientX || (e.touches && e.touches[0].clientX);
-        const y = e.clientY || (e.touches && e.touches[0].clientY);
-        ghost.style.left = x + 'px'; ghost.style.top = y + 'px';
-    }
-
-    function onDragMove(e) {
-        e.preventDefault(); moveGhost(e);
-        const x = e.clientX || (e.touches && e.touches[0].clientX);
-        const y = e.clientY || (e.touches && e.touches[0].clientY);
-        
-        ghost.style.display = 'none'; 
-        const elemBelow = document.elementFromPoint(x, y);
-        ghost.style.display = 'flex';
-        
-        const colBelow = elemBelow ? elemBelow.closest('.task-col') : null;
-        
-        if (currentHoverCol !== colBelow) {
-            if (currentHoverCol) currentHoverCol.classList.remove('drag-over');
-            if (colBelow) colBelow.classList.add('drag-over');
-            currentHoverCol = colBelow;
-        }
-    }
-
-    function onDragEnd(e) {
-        document.removeEventListener('pointermove', onDragMove); document.removeEventListener('pointerup', onDragEnd);
-        if (ghost) { ghost.remove(); ghost = null; }
-        if (currentHoverCol) {
-            currentHoverCol.classList.remove('drag-over');
-            const taskId = currentHoverCol.getAttribute('data-task-id');
-            handleDrop(taskId, dragStudentName);
-            currentHoverCol = null;
-        }
-        dragStudentName = null;
-    }
-
-    function handleDrop(taskId, studentName) {
-        if (!completions[taskId]) completions[taskId] = [];
-        if (completions[taskId].includes(studentName)) { playSound('error'); return; }
-        
-        completions[taskId].push(studentName);
-        saveData(); playSound('drop'); fireConfetti(taskId); renderUserView();
-    }
-
-    function removeCompletion(taskId, studentName) {
-        if(confirm(`${studentName} 학생의 기록을 취소할까요?`)) {
-            completions[taskId] = completions[taskId].filter(n => n !== studentName);
-            saveData(); playSound('delete'); renderUserView();
-        }
-    }
-
-    /* ==========================================
-       폭죽 효과
-    ========================================== */
-    function fireConfetti(taskId) {
-        const canvas = document.getElementById(`canvas-${taskId}`);
-        if(!canvas) return;
-        const ctx = canvas.getContext('2d');
-        canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
-        
-        const particles = [];
-        const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'];
-        
-        for(let i=0; i<30; i++) {
-            particles.push({
-                x: canvas.width / 2, y: canvas.height - 20, r: Math.random() * 5 + 3,
-                dx: Math.random() * 10 - 5, dy: Math.random() * -12 - 5,
-                color: colors[Math.floor(Math.random() * colors.length)]
-            });
-        }
-        
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            let active = false;
-            particles.forEach(p => {
-                p.x += p.dx; p.y += p.dy; p.dy += 0.5; 
-                if(p.y < canvas.height) active = true;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-                ctx.fillStyle = p.color; ctx.fill();
-            });
-            if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height);
-        }
-        animate();
-    }
-
-    /* ==========================================
-       플로팅 타이머
-    ========================================== */
-    let totalSeconds = 20 * 60, timeRemaining = totalSeconds, timerInterval = null, isPlaying = false;
-    
-    function initFloatingTimer() {
-        const timerEl = document.getElementById('floating-timer');
-        const handle = document.getElementById('timer-drag-handle');
-        let isDragging = false, offsetX, offsetY;
-
-        handle.addEventListener('pointerdown', (e) => {
-            isDragging = true;
-            const rect = timerEl.getBoundingClientRect();
-            timerEl.style.transform = 'none';
-            timerEl.style.left = rect.left + 'px';
-            timerEl.style.top = rect.top + 'px';
-            
-            offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
-            document.addEventListener('pointermove', onMove, {passive: false});
-            document.addEventListener('pointerup', onUp);
-        });
-
-        function onMove(e) {
-            if(!isDragging) return;
-            e.preventDefault();
-            timerEl.style.left = (e.clientX - offsetX) + 'px';
-            timerEl.style.top = (e.clientY - offsetY) + 'px';
-        }
-        function onUp() { isDragging = false; document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); }
-        updateTimerDisplay();
-    }
-
-    function updateTimerDisplay() {
-        const m = String(Math.floor(timeRemaining / 60)).padStart(2, '0');
-        const s = String(timeRemaining % 60).padStart(2, '0');
-        const display = document.getElementById('timeDisplay');
-        display.textContent = `${m}:${s}`;
-        display.classList.toggle('warning', timeRemaining <= 60 && timeRemaining > 0);
-    }
-    function setTimeManually() {
-        if(isPlaying) toggleTimer();
-        const input = prompt("설정할 시간을 분 단위로 입력하세요 (예: 15)", Math.floor(timeRemaining / 60));
-        if (input && !isNaN(input) && parseInt(input) > 0) { timeRemaining = parseInt(input) * 60; updateTimerDisplay(); }
-    }
-    function adjustTime(min) { timeRemaining = Math.max(0, timeRemaining + min * 60); updateTimerDisplay(); }
-    function toggleTimer() {
-        const iconPlay = document.getElementById('icon-play'), iconPause = document.getElementById('icon-pause');
-        if (isPlaying) {
-            clearInterval(timerInterval); iconPlay.style.display = 'block'; iconPause.style.display = 'none';
-        } else {
-            if (timeRemaining <= 0) return;
-            timerInterval = setInterval(() => {
-                timeRemaining--; updateTimerDisplay();
-                if (timeRemaining <= 0) {
-                    clearInterval(timerInterval); isPlaying = false;
-                    iconPlay.style.display = 'block'; iconPause.style.display = 'none';
-                    playSound('alert'); setTimeout(() => alert("⏰ 시간이 종료되었습니다!"), 100);
+        const move = (ev) => {
+            ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px';
+            document.querySelectorAll('.task-col').forEach(c => c.classList.remove('drag-over'));
+            const over = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.task-col');
+            if(over) over.classList.add('drag-over');
+        };
+        const up = (ev) => {
+            const over = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.task-col');
+            if(over) {
+                const tid = over.dataset.id;
+                if(!completions[tid].includes(dragName)) {
+                    if(completions[tid].length < 15) {
+                        completions[tid].push(dragName); saveData(); fireConfetti(tid); renderUserView();
+                    } else alert("자리가 부족합니다!");
                 }
-            }, 1000);
-            iconPlay.style.display = 'none'; iconPause.style.display = 'block';
-        }
-        isPlaying = !isPlaying;
-    }
-    function resetTimer() {
-        clearInterval(timerInterval); isPlaying = false;
-        document.getElementById('icon-play').style.display = 'block'; document.getElementById('icon-pause').style.display = 'none';
-        timeRemaining = 20 * 60; updateTimerDisplay();
+            }
+            ghost.remove(); document.querySelectorAll('.task-col').forEach(c => c.classList.remove('drag-over'));
+            document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
+        };
+        document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
     }
 
-    /* ==========================================
-       ADMIN VIEW 렌더링
-    ========================================== */
-    function renderAdminTasks() {
-        const list = document.getElementById('adminTaskList');
-        list.innerHTML = tasks.map(t => `
-            <div class="task-edit-item">
-                <span class="icon-input">${t.icon}</span>
-                <span style="flex-grow:1; font-weight:700">${t.title}</span>
-                <button class="btn-danger-sm" onclick="removeTask('${t.id}')" title="삭제">✕</button>
-            </div>
-        `).join('');
+    function removeDone(tid, name) {
+        if(confirm(`${name} 제출 취소?`)) { completions[tid] = completions[tid].filter(n => n !== name); saveData(); renderUserView(); }
+    }
+
+    function setupDraggable(id, handleId) {
+        const el = document.getElementById(id);
+        const handle = document.getElementById(handleId);
+        handle.onpointerdown = (e) => {
+            let rect = el.getBoundingClientRect();
+            let ox = e.clientX - rect.left, oy = e.clientY - rect.top;
+            const move = (ev) => { el.style.left = (ev.clientX - ox) + 'px'; el.style.top = (ev.clientY - oy) + 'px'; el.style.transform = 'none'; };
+            const up = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); };
+            document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
+        };
+    }
+
+    function switchMode(m) {
+        document.getElementById('user-view').style.display = m === 'user' ? 'flex' : 'none';
+        document.getElementById('admin-view').style.display = m === 'admin' ? 'flex' : 'none';
+        document.getElementById('floating-roster').style.display = m === 'user' ? 'flex' : 'none';
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.id.includes(m)));
+        if(m === 'admin') renderAdmin();
+    }
+    function switchTab(id, btn) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active'); btn.classList.add('active');
+        if(id === 'tab-view') renderAdminView();
+        if(id === 'tab-stat') renderAdminStat();
+    }
+    function initEmojiPopup() {
+        const pop = document.getElementById('emojiPopup');
+        pop.innerHTML = TASK_EMOJIS.map(e => `<div class="emoji-item" onclick="selectEmoji('${e}')">${e}</div>`).join('');
+    }
+    function toggleEmojiPopup() { document.getElementById('emojiPopup').classList.toggle('show'); }
+    function selectEmoji(e) { document.getElementById('taskEmojiBtn').textContent = e; toggleEmojiPopup(); }
+
+    function renderAdmin() {
+        document.getElementById('adminTaskList').innerHTML = tasks.map(t => `<div class="admin-card" style="display:flex; justify-content:space-between; padding:10px"><span>${t.icon} ${t.title}</span><button onclick="delTask('${t.id}')">✕</button></div>`).join('');
+        document.getElementById('adminStudentList').innerHTML = students.map((s, i) => `<div style="background:var(--paper); padding:5px 10px; border-radius:20px; font-weight:700;">${s} <span onclick="delStu(${i})" style="color:red; cursor:pointer;">✕</span></div>`).join('');
     }
     function addTask() {
-        const title = document.getElementById('newTaskTitle').value.trim();
-        const icon = document.getElementById('emojiSelectorBtn').textContent.trim() || '📝';
-        if(title) {
-            const newId = 't' + Date.now();
-            tasks.push({ id: newId, title, icon, color: TASK_COLORS[tasks.length % TASK_COLORS.length] });
-            completions[newId] = []; document.getElementById('newTaskTitle').value = '';
-            saveData(); renderAdminTasks();
-        }
+        const t = document.getElementById('taskT').value, i = document.getElementById('taskEmojiBtn').textContent;
+        if(!t) return; tasks.push({id: 't'+Date.now(), title: t, icon: i, color: COLORS[tasks.length%COLORS.length]});
+        saveData(); document.getElementById('taskT').value = ''; renderAdmin();
     }
-    function removeTask(id) {
-        if(confirm("정말 이 과제를 삭제하시겠습니까?")) {
-            tasks = tasks.filter(t => t.id !== id); delete completions[id];
-            saveData(); renderAdminTasks();
-        }
-    }
-    function resetAllCompletions() {
-        if(confirm("모든 제출 기록을 초기화하시겠습니까? (과제 목록은 유지)")) {
-            tasks.forEach(t => completions[t.id] = []);
-            saveData(); alert("초기화 완료!"); renderAdminOverview(); renderAdminByStudent();
-        }
-    }
+    function delTask(id) { tasks = tasks.filter(t => t.id !== id); saveData(); renderAdmin(); }
+    function addStudent() { const n = document.getElementById('stuN').value; if(!n) return; students.push(n); saveData(); document.getElementById('stuN').value = ''; renderAdmin(); }
+    function delStu(i) { students.splice(i, 1); saveData(); renderAdmin(); }
+    function resetCompletions() { if(confirm("초기화?")) { tasks.forEach(t => completions[t.id] = []); saveData(); renderUserView(); } }
 
-    function renderAdminStudents() {
-        const list = document.getElementById('adminStudentList');
-        list.innerHTML = students.map((name, idx) => `
-            <div style="background:var(--paper); border:1px solid var(--border); padding:6px 12px; border-radius:100px; font-weight:600; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
-                ${getEmoji(idx)} ${name} <span style="color:var(--accent); cursor:pointer;" onclick="removeStudent(${idx})">✕</span>
-            </div>
-        `).join('');
+    function renderAdminView() {
+        document.getElementById('adminInsight').innerHTML = tasks.map(task => {
+            const done = completions[task.id] || [], missing = students.filter(s => !done.includes(s));
+            return `<div class="admin-card"><h3>${task.icon} ${task.title}</h3><p>제출: ${done.join(', ')}</p><p>미제출: ${missing.join(', ')}</p></div>`;
+        }).join('');
     }
-    function addStudent() {
-        const input = document.getElementById('newStudentName'), name = input.value.trim();
-        if(name) { students.push(name); input.value = ''; saveData(); renderAdminStudents(); }
-    }
-    function removeStudent(idx) {
-        if(confirm("이 학생을 명단에서 삭제할까요?")) {
-            const name = students[idx]; students.splice(idx, 1);
-            for(let tid in completions) completions[tid] = completions[tid].filter(s => s !== name);
-            saveData(); renderAdminStudents();
-        }
-    }
-
-    function renderAdminOverview() {
-        const container = document.getElementById('adminOverviewContent');
-        container.innerHTML = tasks.map(task => {
-            const done = completions[task.id];
-            const missing = students.filter(s => !done.includes(s));
-            return `
-                <div class="insight-box">
-                    <div class="insight-header">${task.icon} ${task.title}</div>
-                    <div class="status-section">
-                        <div class="status-title" style="color:var(--success)">✅ 제출완료 (${done.length}명)</div>
-                        <div class="chip-wrap">${done.length ? done.map(s => `<span class="chip done">${s}</span>`).join('') : '<span style="color:var(--ink-light)">아직 제출자가 없습니다.</span>'}</div>
-                    </div>
-                    <div class="status-section">
-                        <div class="status-title" style="color:var(--accent)">🚨 미제출 (${missing.length}명)</div>
-                        <div class="chip-wrap">${missing.length ? missing.map(s => `<span class="chip missing">${s}</span>`).join('') : '<span style="color:var(--success); font-weight:bold;">🎉 전원 제출 완료!</span>'}</div>
-                    </div>
-                </div>
-            `;
+    function renderAdminStat() {
+        document.getElementById('adminStatContent').innerHTML = students.map((s, idx) => {
+            let row = tasks.map(t => `<span class="badge ${completions[t.id].includes(s)?'done':'missing'}">${t.icon} ${completions[t.id].includes(s)?'O':'X'}</span>`).join('');
+            return `<tr><td style="padding:15px; font-weight:800; border-bottom:1px solid #eee;">${EMOJIS[idx%EMOJIS.length]} ${s}</td><td style="padding:15px; border-bottom:1px solid #eee;">${row}</td></tr>`;
         }).join('');
     }
 
-    function renderAdminByStudent() {
-        const container = document.getElementById('adminByStudentContent');
-        container.innerHTML = students.map((student, idx) => {
-            const taskBadges = tasks.map(task => {
-                const isDone = completions[task.id].includes(student);
-                return `<span class="badge ${isDone ? 'done' : 'missing'}">
-                            ${task.icon} <span>${task.title}</span> 
-                            <strong style="margin-left:4px;">${isDone ? 'O' : 'X'}</strong>
-                        </span>`;
-            }).join('');
-            return `<tr>
-                <td style="font-weight:800; font-size:1.1rem; color:var(--ink);">${getEmoji(idx)} ${student}</td>
-                <td>${taskBadges}</td>
-            </tr>`;
-        }).join('');
+    function fireConfetti(tid) {
+        const canvas = document.getElementById(`cf-${tid}`);
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+        const pts = Array.from({length:30}, () => ({x:canvas.width/2, y:canvas.height/2, dx:Math.random()*8-4, dy:Math.random()*-12-3, c:COLORS[Math.floor(Math.random()*6)]}));
+        function ani() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            let active = false;
+            pts.forEach(p => { p.x+=p.dx; p.y+=p.dy; p.dy+=0.4; if(p.y < canvas.height) active=true; ctx.fillStyle=p.c; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill(); });
+            if(active) requestAnimationFrame(ani);
+        }
+        ani();
     }
+
+    let tRem = 1200, tInt = null;
+    function updateT() { document.getElementById('timeDisplay').textContent = `${String(Math.floor(tRem/60)).padStart(2,'0')}:${String(tRem%60).padStart(2,'0')}`; }
+    function toggleTimer() {
+        const btn = document.getElementById('playBtn');
+        if(tInt) { clearInterval(tInt); tInt = null; btn.textContent = '▶'; }
+        else { tInt = setInterval(() => { if(tRem>0) {tRem--; updateT();} else {clearInterval(tInt); alert("끝!");} }, 1000); btn.textContent = '⏸'; }
+    }
+    function resetTimer() { tRem = 1200; updateT(); }
+    function adjustTime(v) { tRem = Math.max(0, tRem + v*60); updateT(); }
+    function setTimeManually() { let m = prompt("분:", 20); if(m) { tRem = parseInt(m)*60; updateT(); } }
 
     window.onload = init;
 </script>
