@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>다했어요! 보드 (Ultimate Mac OS Edition)</title>
+<title>다했어요! 보드 (Ultimate Edition)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
@@ -21,12 +21,13 @@
         --navy-light: #eff6ff;
         --accent: #e11d48;
         --success: #10b981;
+        --warning: #f59e0b;
         --border: #e2e8f0;
         
         --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
         --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
         --shadow-lg: 0 15px 35px rgba(15, 23, 42, 0.08);
-        --shadow-dock: 0 20px 50px rgba(0, 0, 0, 0.15);
+        --shadow-xl: 0 25px 50px rgba(15, 23, 42, 0.15);
         
         --radius-sm: 8px;
         --radius-md: 16px;
@@ -51,14 +52,13 @@
         display: flex; justify-content: space-between; align-items: center;
         padding: 16px 30px; background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
-        z-index: 50; flex-shrink: 0; height: 80px; position: relative;
+        z-index: 50; flex-shrink: 0; height: 76px;
     }
-    .brand { display: flex; align-items: center; gap: 12px; width: 300px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon { font-size: 2rem; }
     .brand-text h1 { margin: 0; font-size: 1.4rem; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
     .brand-text p { margin: 0; font-size: 0.85rem; color: var(--ink-light); font-weight: 600; }
     
-    .header-right { width: 300px; display: flex; justify-content: flex-end; }
     .mode-toggle { display: flex; background: var(--paper); border-radius: 100px; padding: 4px; border: 1px solid var(--border); }
     .mode-btn {
         padding: 8px 20px; border: none; background: transparent; border-radius: 100px;
@@ -67,59 +67,37 @@
     .mode-btn.active { background: var(--surface); color: var(--navy); box-shadow: var(--shadow-sm); }
 
     /* ==========================================
-       Floating Timer
+       USER VIEW (Student Board)
     ========================================== */
-    #floating-timer {
-        position: absolute; z-index: 1000;
-        background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
-        box-shadow: var(--shadow-md); padding: 6px 16px 6px 10px;
-        display: flex; align-items: center; gap: 16px;
-        transition: box-shadow 0.2s;
-    }
-    #floating-timer.dragging { box-shadow: var(--shadow-lg); opacity: 0.95; }
-    
-    .drag-handle { cursor: grab; padding: 10px; color: var(--ink-light); font-size: 1.2rem; line-height: 0.5; user-select: none; touch-action: none;}
-    .drag-handle:active { cursor: grabbing; color: var(--navy); }
-    
-    .time-display { font-family: 'DM Sans', sans-serif; font-size: 2rem; font-weight: 800; color: var(--ink); letter-spacing: -1px; font-variant-numeric: tabular-nums; cursor: pointer; }
-    .time-display.warning { color: var(--accent); animation: pulse 1s infinite; }
-    
-    .timer-controls { display: flex; gap: 6px; align-items: center; }
-    .timer-btn { width: 36px; height: 36px; border: none; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: var(--ink-light); transition: 0.2s; }
-    .timer-btn:hover { background: var(--border); color: var(--ink); }
-    .play-pause-btn { width: 44px; height: 44px; background: var(--navy); color: white; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3); }
-    .play-pause-btn:hover { background: #172554; }
-    .play-pause-btn svg { width: 18px; height: 18px; fill: currentColor; }
+    #user-view { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
 
-    /* ==========================================
-       USER VIEW (Main Board)
-    ========================================== */
-    #user-view { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-
+    .board-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; width: 100%; }
+    
     .task-container {
-        display: flex; gap: 24px; 
-        width: 100%; height: 100%;
-        padding: 40px 40px 240px 40px; /* 하단 독바를 위한 240px 여백 (가운데 정렬 프레이밍) */
-        overflow-x: auto; overflow-y: hidden;
-        align-items: stretch; justify-content: center;
+        flex-grow: 1; padding: 30px; overflow-x: auto; overflow-y: hidden;
+        display: flex; gap: 24px; align-items: stretch; 
     }
     
     .task-container::-webkit-scrollbar { height: 10px; }
     .task-container::-webkit-scrollbar-track { background: transparent; }
-    .task-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .task-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid var(--paper); }
 
     .task-col {
-        flex: 1 1 300px; min-width: 280px; max-width: 600px; /* 과제가 많아도, 적어도 적절한 비율 유지 */
-        background: rgba(255, 255, 255, 0.9); border: 2px solid var(--surface);
+        flex: 1 1 300px; min-width: 300px; max-width: 700px;
+        background: rgba(255, 255, 255, 0.85); border: 2px solid var(--surface);
         border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
         display: flex; flex-direction: column; position: relative; 
         transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
+    .task-container[data-count="1"] .task-col { margin: 0 auto; }
     
     .task-col.drag-over { border-color: var(--navy); box-shadow: inset 0 0 0 2px var(--navy), var(--shadow-lg); background: var(--surface); }
     
     .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
-    .task-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); transition: all 0.3s ease; }
+    .task-icon {
+        width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); transition: all 0.3s ease;
+    }
     .task-info { flex-grow: 1; }
     .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; transition: all 0.3s ease; }
     
@@ -129,23 +107,15 @@
     .progress-fill { fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
     .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); transition: all 0.3s ease; }
 
-    /* 과제 1~2개일 때 동적 스케일링 */
-    .task-container[data-count="1"] .task-col { max-width: 800px; margin: 0 auto; }
-    .task-container[data-count="1"] .task-header { padding: 40px; }
-    .task-container[data-count="1"] .task-icon { width: 80px; height: 80px; font-size: 3.5rem; border-radius: 20px; }
-    .task-container[data-count="1"] .task-title { font-size: 2rem; }
-    .task-container[data-count="1"] .progress-wrap { width: 70px; height: 70px; }
-    .task-container[data-count="1"] .progress-text { font-size: 1.2rem; }
-    .task-container[data-count="1"] .done-chip { padding: 16px 8px; }
-    .task-container[data-count="1"] .done-emoji { font-size: 2rem; }
-    .task-container[data-count="1"] .done-name { font-size: 1rem; }
-
-    .task-container[data-count="2"] .task-col { max-width: 550px; margin: 0 auto; }
-    .task-container[data-count="2"] .task-header { padding: 30px; }
-    .task-container[data-count="2"] .task-icon { width: 64px; height: 64px; font-size: 2.5rem; border-radius: 16px; }
-    .task-container[data-count="2"] .task-title { font-size: 1.5rem; }
-    .task-container[data-count="2"] .progress-wrap { width: 56px; height: 56px; }
-    .task-container[data-count="2"] .progress-text { font-size: 1rem; }
+    /* Dynamic Scaling for 1-2 Tasks */
+    .task-container[data-count="1"] .task-icon { width: 76px; height: 76px; font-size: 3rem; border-radius: 20px; }
+    .task-container[data-count="1"] .task-title { font-size: 1.6rem; }
+    .task-container[data-count="1"] .progress-wrap { width: 64px; height: 64px; }
+    .task-container[data-count="1"] .progress-text { font-size: 1.1rem; }
+    .task-container[data-count="2"] .task-icon { width: 60px; height: 60px; font-size: 2.2rem; border-radius: 16px; }
+    .task-container[data-count="2"] .task-title { font-size: 1.3rem; }
+    .task-container[data-count="2"] .progress-wrap { width: 52px; height: 52px; }
+    .task-container[data-count="2"] .progress-text { font-size: 0.9rem; }
 
     .task-body {
         padding: 24px; flex-grow: 1; overflow-y: auto;
@@ -160,75 +130,89 @@
     }
     .done-chip:hover::after {
         content: '✕ 취소'; position: absolute; inset: 0; background: rgba(225, 29, 72, 0.9); color: white;
-        display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; animation: fadeIn 0.2s;
+        display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; animation: fadeIn 0.2s;
     }
     .done-emoji { font-size: 1.6rem; }
     .done-name { font-size: 0.85rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
 
     /* ==========================================
-       Mac OS Dock (Bottom Floating Roster)
+       FLOATING STUDENT ROSTER (Mac OS Dock Style)
     ========================================== */
-    #mac-dock-wrapper {
-        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-        z-index: 900; width: 90%; max-width: 1400px;
-        pointer-events: none; /* 클릭 통과 (내부 컨테이너만 이벤트 받음) */
-        display: flex; justify-content: center;
-    }
-
-    .mac-dock {
-        pointer-events: auto; /* 독바 본체는 이벤트 받음 */
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.6);
-        border-radius: 30px; padding: 16px 24px;
-        display: flex; flex-wrap: wrap; /* 핵심: 넘치면 자동으로 다음 줄로 넘어감 (스크롤 제로) */
-        justify-content: center; gap: 12px;
-        box-shadow: var(--shadow-dock);
-        transition: all 0.3s ease;
+    #floating-roster {
+        position: fixed; z-index: 900;
+        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
+        border: 1px solid var(--border); border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-xl); display: flex; overflow: hidden;
     }
     
-    /* 독바 상단에 제목과 카운트 표시 */
-    .dock-title-bar {
-        width: 100%; text-align: center; margin-bottom: 12px;
-        font-size: 0.9rem; font-weight: 800; color: var(--ink-light);
-        display: flex; justify-content: center; align-items: center; gap: 8px;
+    .roster-header {
+        background: var(--surface); display: flex; align-items: center; justify-content: space-between;
+        cursor: grab; user-select: none; touch-action: none;
     }
-    .roster-count { background: var(--navy); color: white; padding: 2px 8px; border-radius: 100px; font-size: 0.75rem; }
+    .roster-header:active { cursor: grabbing; background: var(--paper); }
+    .roster-title-area { display: flex; align-items: center; gap: 8px; }
+    .roster-title { font-weight: 800; color: var(--navy); margin: 0; font-size: 1rem; }
+    .roster-count { font-size: 0.75rem; color: var(--navy); font-weight: 700; background: var(--navy-light); padding: 4px 10px; border-radius: 100px; }
+    .roster-controls { display: flex; gap: 8px; }
+    .roster-btn { width: 28px; height: 28px; border: none; background: var(--paper); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-light); font-weight: bold; font-size: 1rem; transition: 0.2s; }
+    .roster-btn:hover { background: var(--border); color: var(--ink); }
 
-    .dock-chip {
-        background: var(--surface); border: 1px solid var(--border); border-radius: 16px; 
-        padding: 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px;
-        font-weight: 700; font-size: 0.85rem; color: var(--ink);
-        cursor: grab; user-select: none; touch-action: none; 
-        box-shadow: var(--shadow-sm); min-width: 75px;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), margin 0.2s, box-shadow 0.2s;
-        will-change: transform;
-    }
-    /* Mac OS Dock Zoom Effect */
-    .dock-chip:hover {
-        transform: scale(1.25) translateY(-12px);
-        z-index: 10;
-        margin: 0 10px; /* 주변 아이콘 밀어내기 */
-        box-shadow: 0 15px 25px rgba(0,0,0,0.15);
-        border-color: var(--navy); color: var(--navy);
-    }
-    .dock-chip:active { cursor: grabbing; transform: scale(1) translateY(0); opacity: 0.6; }
-    
-    .dock-emoji { font-size: 1.8rem; line-height: 1; pointer-events: none; }
-    .dock-name { pointer-events: none; }
+    /* Vertical (1 Column) - Left / Right */
+    #floating-roster[data-layout="vertical"] { flex-direction: column; width: 170px; max-height: 75vh; }
+    #floating-roster[data-layout="vertical"] .roster-header { padding: 16px 15px; border-bottom: 1px solid var(--border); }
+    #floating-roster[data-layout="vertical"] .roster-title-area { flex-direction: column; align-items: flex-start; gap: 4px; }
+    #floating-roster[data-layout="vertical"] .dock-container { display: grid; grid-template-columns: 1fr; padding: 15px; gap: 10px; overflow-y: auto; overflow-x: hidden; }
 
-    /* Dragging Ghost Clone */
+    /* Horizontal (1 Row) - Bottom */
+    #floating-roster[data-layout="horizontal"] { flex-direction: column; width: 90vw; max-width: 1200px; height: auto; }
+    #floating-roster[data-layout="horizontal"] .roster-header { padding: 10px 20px; border-bottom: 1px solid var(--border); flex-direction: row; }
+    #floating-roster[data-layout="horizontal"] .roster-title-area { flex-direction: row; align-items: center; }
+    #floating-roster[data-layout="horizontal"] .dock-container { display: flex; flex-direction: row; padding: 12px 15px; gap: 10px; overflow-x: auto; overflow-y: hidden; align-items: center; }
+    #floating-roster[data-layout="horizontal"] .draggable-chip { flex-shrink: 0; margin-bottom: 0; }
+
+    .dock-container::-webkit-scrollbar { width: 6px; height: 6px; }
+    .dock-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+    .draggable-chip {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 12px; 
+        padding: 10px 14px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; 
+        cursor: grab; user-select: none; touch-action: none; transition: background 0.2s, box-shadow 0.2s;
+        box-shadow: var(--shadow-sm);
+    }
+    .draggable-chip:hover { background: var(--navy-light); border-color: var(--navy); }
+    .draggable-chip:active { cursor: grabbing; opacity: 0.5; }
+
     .ghost-chip {
         position: fixed; pointer-events: none; z-index: 9999;
-        background: var(--surface); border: 2px solid var(--navy); border-radius: 16px;
-        padding: 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px;
-        font-weight: 700; font-size: 0.85rem; color: var(--navy);
-        box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.1);
+        background: var(--surface); border: 2px solid var(--navy); border-radius: 12px;
+        padding: 12px 20px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem;
+        box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.05);
     }
-    .ghost-chip .dock-emoji { font-size: 1.8rem; }
 
     /* ==========================================
-       ADMIN VIEW (교사 관리자)
+       FLOATING TIMER
+    ========================================== */
+    #floating-timer {
+        position: fixed; z-index: 1000;
+        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 100px;
+        box-shadow: var(--shadow-md); padding: 6px 16px 6px 10px;
+        display: flex; align-items: center; gap: 16px;
+    }
+    .drag-handle { cursor: grab; padding: 10px; color: var(--ink-light); font-size: 1.2rem; line-height: 0.5; user-select: none; touch-action: none;}
+    .drag-handle:active { cursor: grabbing; color: var(--navy); }
+    
+    .time-display { font-family: 'DM Sans', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--ink); letter-spacing: -1px; font-variant-numeric: tabular-nums; cursor: pointer; }
+    .time-display.warning { color: var(--accent); animation: pulse 1s infinite; }
+    
+    .timer-controls { display: flex; gap: 6px; align-items: center; }
+    .timer-btn { width: 36px; height: 36px; border: none; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: var(--ink-light); transition: 0.2s; }
+    .timer-btn:hover { background: var(--border); color: var(--ink); }
+    .play-pause-btn { width: 44px; height: 44px; background: var(--navy); color: white; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3); }
+    .play-pause-btn:hover { background: #172554; }
+    .play-pause-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* ==========================================
+       ADMIN VIEW
     ========================================== */
     #admin-view { flex-grow: 1; display: none; background: var(--paper); overflow: hidden; }
     .admin-container { display: flex; height: 100%; width: 100%; max-width: 1600px; margin: 0 auto; }
@@ -251,16 +235,14 @@
     
     .panel-title { font-size: 1.4rem; font-weight: 800; color: var(--navy); margin: 0 0 24px 0; display: flex; justify-content: space-between; align-items: center; }
 
-    /* Admin Tab Elements */
     .admin-card { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 24px; }
     .task-edit-item { display: flex; gap: 10px; align-items: center; background: var(--paper); padding: 12px; border-radius: var(--radius-md); margin-bottom: 8px; }
     .icon-input { width: 50px; text-align: center; font-size: 1.5rem; }
     .text-input { flex-grow: 1; border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); outline: none; font-size: 0.95rem; font-family: inherit; }
     .text-input:focus { border-color: var(--navy); }
-    .btn-primary { background: var(--navy); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s;}
+    .btn-primary { background: var(--navy); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; white-space: nowrap; }
     .btn-primary:hover { background: #172554; }
-    .btn-danger-sm { background: #ffe4e6; color: var(--accent); border: none; width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; transition: 0.2s;}
-    .btn-danger-sm:hover { background: var(--accent); color: white; }
+    .btn-danger-sm { background: #ffe4e6; color: var(--accent); border: none; width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; }
 
     /* Emoji Picker Styles */
     .emoji-picker-container { position: relative; display: flex; align-items: stretch; }
@@ -271,7 +253,7 @@
     }
     .emoji-selector-btn:hover { border-color: var(--navy); }
     .emoji-picker {
-        position: absolute; top: calc(100% + 10px); left: 0;
+        position: absolute; bottom: calc(100% + 10px); left: 0;
         background: var(--surface); border: 1px solid var(--border);
         border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
         padding: 12px; display: none; grid-template-columns: repeat(5, 1fr);
@@ -284,7 +266,6 @@
     }
     .emoji-option:hover { background: var(--paper); }
 
-    /* Insight Overview */
     .insight-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 24px; }
     .insight-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
     .insight-header { background: var(--paper); padding: 16px 20px; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid var(--border); }
@@ -296,7 +277,6 @@
     .chip.done { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
     .chip.missing { background: #fff1f2; color: var(--accent); border: 1px solid #fecdd3; }
 
-    /* By Student Table */
     .student-record-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
     .student-record-table th, .student-record-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
     .student-record-table th { background: var(--paper); font-weight: 800; color: var(--ink-light); }
@@ -319,14 +299,13 @@
         .admin-tab-btn { border-left: none; border-bottom: 4px solid transparent; white-space: nowrap; }
         .admin-tab-btn.active { border-left-color: transparent; border-bottom-color: var(--navy); }
         .task-col { flex: 0 0 260px; min-width: 260px; }
-        .task-container { padding-bottom: 280px; }
     }
 </style>
 </head>
 <body>
 
 <div id="app">
-    <header id="main-header">
+    <header>
         <div class="brand">
             <div class="brand-icon">🎯</div>
             <div class="brand-text">
@@ -334,37 +313,42 @@
                 <p>스스로 체크하는 우리 반 과제 관리</p>
             </div>
         </div>
-        
-        <div id="floating-timer">
-            <div class="drag-handle" id="timer-drag-handle" title="드래그하여 이동">⋮⋮</div>
-            <div class="time-display" id="timeDisplay" onclick="setTimeManually()" title="클릭하여 시간 설정">20:00</div>
-            <div class="timer-controls">
-                <button class="timer-btn" onclick="adjustTime(-1)">-1</button>
-                <button class="timer-btn play-pause-btn" id="playBtn" onclick="toggleTimer()">
-                    <svg id="icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                    <svg id="icon-pause" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                </button>
-                <button class="timer-btn" onclick="resetTimer()" title="초기화">↺</button>
-                <button class="timer-btn" onclick="adjustTime(1)">+1</button>
-            </div>
-        </div>
-
-        <div class="header-right">
-            <div class="mode-toggle">
-                <button class="mode-btn active" onclick="switchMode('user')" id="btn-user">🎓 학생 보드</button>
-                <button class="mode-btn" onclick="switchMode('admin')" id="btn-admin">🔒 교사 관리자</button>
-            </div>
+        <div class="mode-toggle">
+            <button class="mode-btn active" onclick="switchMode('user')" id="btn-user">🎓 학생 보드</button>
+            <button class="mode-btn" onclick="switchMode('admin')" id="btn-admin">🔒 교사 관리자</button>
         </div>
     </header>
+
+    <div id="floating-timer" style="top: 10px; left: 50%; transform: translateX(-50%);">
+        <div class="drag-handle" id="timer-drag-handle" title="드래그하여 이동">⋮⋮</div>
+        <div class="time-display" id="timeDisplay" onclick="setTimeManually()" title="클릭하여 시간 설정">20:00</div>
+        <div class="timer-controls">
+            <button class="timer-btn" onclick="adjustTime(-1)">-1</button>
+            <button class="timer-btn play-pause-btn" id="playBtn" onclick="toggleTimer()">
+                <svg id="icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <svg id="icon-pause" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </button>
+            <button class="timer-btn" onclick="resetTimer()" title="초기화">↺</button>
+            <button class="timer-btn" onclick="adjustTime(1)">+1</button>
+        </div>
+    </div>
+
+    <div id="floating-roster" data-layout="vertical" style="left: 30px; top: 100px;">
+        <div class="roster-header" id="roster-drag-handle">
+            <div class="roster-title-area">
+                <span class="roster-title">👇 이름표</span>
+                <span class="roster-count" id="totalStudentsCount">0명</span>
+            </div>
+            <div class="roster-controls">
+                <button class="roster-btn" onclick="toggleRoster()" id="toggleRosterBtn" title="최소화/최대화">−</button>
+            </div>
+        </div>
+        <div class="dock-container" id="studentDock"></div>
+    </div>
 
     <div id="user-view">
         <div class="board-main">
             <div class="task-container" id="taskGrid"></div>
-        </div>
-
-        <div id="mac-dock-wrapper">
-            <div class="mac-dock" id="studentDock">
-                </div>
         </div>
     </div>
 
@@ -381,8 +365,8 @@
                     <h2 class="panel-title">과제 및 명단 설정 <button class="btn-primary" onclick="resetAllCompletions()" style="background:var(--accent); font-size:0.9rem;">전체 제출기록 초기화</button></h2>
                     
                     <div class="admin-card">
-                        <h3 style="margin-top:0; color:var(--ink-light); margin-bottom:15px;">1. 과제 목록 관리 (최대 6개 / 크기 자동조절)</h3>
-                        <div id="adminTaskList" style="margin-bottom: 20px;"></div>
+                        <h3 style="margin-top:0; color:var(--ink-light);">1. 과제 목록 관리 (최대 6개)</h3>
+                        <div id="adminTaskList" style="margin-bottom: 15px;"></div>
                         
                         <div style="display:flex; gap:10px; align-items: stretch; position: relative;">
                             <div class="emoji-picker-container">
@@ -395,12 +379,12 @@
                     </div>
 
                     <div class="admin-card">
-                        <h3 style="margin-top:0; color:var(--ink-light); margin-bottom:15px;">2. 학생 명단 관리</h3>
-                        <div style="display:flex; gap:10px; margin-bottom: 20px;">
+                        <h3 style="margin-top:0; color:var(--ink-light);">2. 학생 명단 관리</h3>
+                        <div style="display:flex; gap:10px; margin-bottom: 15px;">
                             <input type="text" id="newStudentName" class="text-input" placeholder="학생 이름 입력" onkeypress="if(event.key==='Enter') addStudent()">
-                            <button class="btn-primary" onclick="addStudent()">명단에 추가</button>
+                            <button class="btn-primary" onclick="addStudent()">학생 추가</button>
                         </div>
-                        <div style="display:flex; flex-wrap:wrap; gap:10px;" id="adminStudentList"></div>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px;" id="adminStudentList"></div>
                     </div>
                 </div>
 
@@ -414,7 +398,7 @@
                     <table class="student-record-table">
                         <thead>
                             <tr>
-                                <th style="width: 200px;">학생 이름</th>
+                                <th style="width: 180px;">학생 이름</th>
                                 <th>과제 달성 현황</th>
                             </tr>
                         </thead>
@@ -463,19 +447,18 @@
     const TASK_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
     const TASK_EMOJIS = ["📝", "📖", "🥛", "🧹", "🎨", "🏃‍♂️", "🎵", "🗣️", "💡", "💯", "🍎", "⏰", "🗑️", "🧽", "🪴", "🧩", "⚽", "🍽️", "💻", "🔬", "🖍️", "🎒", "🚌", "🪥", "🦷"];
 
-    const defaultStudents = ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우","윤지호","박수아","이도현","김태희","정우진","최다은","강민지","조윤호","황서진","백도윤","권시연","송건우","이은지"];
-    let students = JSON.parse(localStorage.getItem('db_students_final2')) || defaultStudents;
-    
-    let tasks = JSON.parse(localStorage.getItem('db_tasks_final2')) || [
+    let students = JSON.parse(localStorage.getItem('db_students_v3')) || ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우"];
+    let tasks = JSON.parse(localStorage.getItem('db_tasks_v3')) || [
         { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
-        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] }
+        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] },
+        { id: 't3', title: '수학 익힘책 12쪽', icon: '✏️', color: TASK_COLORS[2] }
     ];
-    let completions = JSON.parse(localStorage.getItem('db_completions_final2')) || {};
+    let completions = JSON.parse(localStorage.getItem('db_completions_v3')) || {};
 
     function saveData() {
-        localStorage.setItem('db_students_final2', JSON.stringify(students));
-        localStorage.setItem('db_tasks_final2', JSON.stringify(tasks));
-        localStorage.setItem('db_completions_final2', JSON.stringify(completions));
+        localStorage.setItem('db_students_v3', JSON.stringify(students));
+        localStorage.setItem('db_tasks_v3', JSON.stringify(tasks));
+        localStorage.setItem('db_completions_v3', JSON.stringify(completions));
     }
     function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
 
@@ -488,6 +471,7 @@
         
         renderUserView();
         initFloatingTimer();
+        initFloatingRoster(); 
         initEmojiPicker(); 
         
         const board = document.getElementById('taskGrid');
@@ -496,18 +480,10 @@
         });
         
         document.body.addEventListener('click', () => { try{ if(audioCtx) audioCtx.resume(); }catch(e){} }, {once: true});
-        
-        // 타이머 초기 위치 설정 (상단 헤더 정중앙)
-        setTimeout(() => {
-            const timer = document.getElementById('floating-timer');
-            timer.style.top = '16px'; 
-            timer.style.left = '50%'; 
-            timer.style.transform = 'translateX(-50%)';
-        }, 100);
     }
 
     function switchMode(mode) {
-        const dockWrapper = document.getElementById('mac-dock-wrapper');
+        const floatingRoster = document.getElementById('floating-roster');
         
         if(mode === 'admin') {
             const pwd = prompt("관리자 암호를 입력하세요 (기본: 0000)");
@@ -516,14 +492,14 @@
             document.getElementById('admin-view').style.display = 'flex';
             document.getElementById('btn-user').classList.remove('active');
             document.getElementById('btn-admin').classList.add('active');
-            dockWrapper.style.display = 'none'; 
+            floatingRoster.style.display = 'none'; 
             renderAdminTasks(); renderAdminStudents(); renderAdminOverview(); renderAdminByStudent();
         } else {
             document.getElementById('user-view').style.display = 'flex';
             document.getElementById('admin-view').style.display = 'none';
             document.getElementById('btn-user').classList.add('active');
             document.getElementById('btn-admin').classList.remove('active');
-            dockWrapper.style.display = 'flex'; 
+            floatingRoster.style.display = 'flex'; 
             renderUserView();
         }
     }
@@ -608,19 +584,91 @@
 
     function renderDock() {
         const dock = document.getElementById('studentDock');
-        dock.innerHTML = `
-            <div class="dock-title-bar">
-                👇 이름표 던지기 <span class="roster-count">${students.length}명</span>
-            </div>
-        `;
+        dock.innerHTML = '';
+        document.getElementById('totalStudentsCount').textContent = `${students.length}명`;
 
         students.forEach((name, idx) => {
             const chip = document.createElement('div');
-            chip.className = 'dock-chip';
-            chip.innerHTML = `<span class="dock-emoji">${getEmoji(idx)}</span> <span class="dock-name">${name}</span>`;
+            chip.className = 'draggable-chip';
+            chip.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
             chip.addEventListener('pointerdown', (e) => startDrag(e, name, idx, chip));
             dock.appendChild(chip);
         });
+    }
+
+    /* ==========================================
+       플로팅 명단 기능 (Mac OS Dock Style)
+    ========================================== */
+    function initFloatingRoster() {
+        const rosterEl = document.getElementById('floating-roster');
+        const handle = document.getElementById('roster-drag-handle');
+        let isDragging = false, offsetX, offsetY;
+
+        handle.addEventListener('pointerdown', (e) => {
+            if(e.target.tagName.toLowerCase() === 'button') return; 
+            isDragging = true;
+            
+            rosterEl.style.transition = 'none';
+            const rect = rosterEl.getBoundingClientRect();
+            rosterEl.style.left = rect.left + 'px';
+            rosterEl.style.top = rect.top + 'px';
+            
+            offsetX = e.clientX - rect.left; 
+            offsetY = e.clientY - rect.top;
+            
+            document.addEventListener('pointermove', onMove, {passive: false});
+            document.addEventListener('pointerup', onUp);
+        });
+
+        function onMove(e) {
+            if(!isDragging) return;
+            e.preventDefault();
+            rosterEl.style.left = (e.clientX - offsetX) + 'px';
+            rosterEl.style.top = (e.clientY - offsetY) + 'px';
+            
+            const wh = window.innerHeight;
+            const currentLayout = rosterEl.getAttribute('data-layout');
+            
+            if (e.clientY > wh * 0.7 && currentLayout !== 'horizontal') {
+                rosterEl.setAttribute('data-layout', 'horizontal');
+                const newRect = rosterEl.getBoundingClientRect();
+                offsetX = e.clientX - newRect.left; offsetY = e.clientY - newRect.top; 
+            } 
+            else if (e.clientY <= wh * 0.7 && currentLayout !== 'vertical') {
+                rosterEl.setAttribute('data-layout', 'vertical');
+                const newRect = rosterEl.getBoundingClientRect();
+                offsetX = e.clientX - newRect.left; offsetY = e.clientY - newRect.top; 
+            }
+        }
+        
+        function onUp(e) { 
+            isDragging = false; 
+            document.removeEventListener('pointermove', onMove); 
+            document.removeEventListener('pointerup', onUp); 
+            
+            rosterEl.style.transition = 'left 0.3s ease, top 0.3s ease';
+            const ww = window.innerWidth; const wh = window.innerHeight;
+            const rect = rosterEl.getBoundingClientRect();
+            const layout = rosterEl.getAttribute('data-layout');
+            
+            if (layout === 'horizontal') {
+                rosterEl.style.top = (wh - rect.height - 20) + 'px';
+                rosterEl.style.left = Math.max(20, Math.min(rect.left, ww - rect.width - 20)) + 'px';
+            } else {
+                if (rect.left + rect.width / 2 < ww / 2) rosterEl.style.left = '20px';
+                else rosterEl.style.left = (ww - rect.width - 20) + 'px';
+                rosterEl.style.top = Math.max(80, Math.min(rect.top, wh - rect.height - 20)) + 'px';
+            }
+            
+            setTimeout(() => { rosterEl.style.transition = 'none'; }, 300);
+        }
+    }
+
+    function toggleRoster() {
+        const dock = document.getElementById('studentDock');
+        const btn = document.getElementById('toggleRosterBtn');
+        if(dock.style.display === 'none') { dock.style.display = ''; btn.textContent = '−'; } 
+        else { dock.style.display = 'none'; btn.textContent = '＋'; }
     }
 
     /* ==========================================
@@ -633,7 +681,7 @@
         
         ghost = document.createElement('div');
         ghost.className = 'ghost-chip';
-        ghost.innerHTML = `<span class="dock-emoji">${getEmoji(idx)}</span> <span class="dock-name">${name}</span>`;
+        ghost.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
         document.body.appendChild(ghost);
         
         moveGhost(e);
@@ -687,7 +735,7 @@
     }
 
     function removeCompletion(taskId, studentName) {
-        if(confirm(`${studentName} 학생의 제출을 취소할까요?`)) {
+        if(confirm(`${studentName} 학생의 기록을 취소할까요?`)) {
             completions[taskId] = completions[taskId].filter(n => n !== studentName);
             saveData(); playSound('delete'); renderUserView();
         }
@@ -705,10 +753,10 @@
         const particles = [];
         const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'];
         
-        for(let i=0; i<40; i++) {
+        for(let i=0; i<30; i++) {
             particles.push({
                 x: canvas.width / 2, y: canvas.height - 20, r: Math.random() * 5 + 3,
-                dx: Math.random() * 12 - 6, dy: Math.random() * -12 - 5,
+                dx: Math.random() * 10 - 5, dy: Math.random() * -12 - 5,
                 color: colors[Math.floor(Math.random() * colors.length)]
             });
         }
@@ -728,7 +776,7 @@
     }
 
     /* ==========================================
-       플로팅 자유 타이머
+       플로팅 타이머
     ========================================== */
     let totalSeconds = 20 * 60, timeRemaining = totalSeconds, timerInterval = null, isPlaying = false;
     
@@ -739,15 +787,12 @@
 
         handle.addEventListener('pointerdown', (e) => {
             isDragging = true;
-            timerEl.classList.add('dragging');
             const rect = timerEl.getBoundingClientRect();
-            
             timerEl.style.transform = 'none';
             timerEl.style.left = rect.left + 'px';
             timerEl.style.top = rect.top + 'px';
             
-            offsetX = e.clientX - rect.left; 
-            offsetY = e.clientY - rect.top;
+            offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
             document.addEventListener('pointermove', onMove, {passive: false});
             document.addEventListener('pointerup', onUp);
         });
@@ -758,12 +803,7 @@
             timerEl.style.left = (e.clientX - offsetX) + 'px';
             timerEl.style.top = (e.clientY - offsetY) + 'px';
         }
-        function onUp() { 
-            isDragging = false; 
-            timerEl.classList.remove('dragging');
-            document.removeEventListener('pointermove', onMove); 
-            document.removeEventListener('pointerup', onUp); 
-        }
+        function onUp() { isDragging = false; document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); }
         updateTimerDisplay();
     }
 
@@ -812,7 +852,7 @@
         list.innerHTML = tasks.map(t => `
             <div class="task-edit-item">
                 <span class="icon-input">${t.icon}</span>
-                <span style="flex-grow:1; font-weight:700; font-size:1.05rem;">${t.title}</span>
+                <span style="flex-grow:1; font-weight:700">${t.title}</span>
                 <button class="btn-danger-sm" onclick="removeTask('${t.id}')" title="삭제">✕</button>
             </div>
         `).join('');
@@ -820,7 +860,6 @@
     function addTask() {
         const title = document.getElementById('newTaskTitle').value.trim();
         const icon = document.getElementById('emojiSelectorBtn').textContent.trim() || '📝';
-        if(tasks.length >= 6) { alert("과제는 최대 6개까지만 설정할 수 있습니다."); return; }
         if(title) {
             const newId = 't' + Date.now();
             tasks.push({ id: newId, title, icon, color: TASK_COLORS[tasks.length % TASK_COLORS.length] });
@@ -835,17 +874,17 @@
         }
     }
     function resetAllCompletions() {
-        if(confirm("모든 학생의 제출 기록을 초기화하시겠습니까? (과제 목록은 유지됩니다)")) {
+        if(confirm("모든 제출 기록을 초기화하시겠습니까? (과제 목록은 유지)")) {
             tasks.forEach(t => completions[t.id] = []);
-            saveData(); alert("기록 초기화 완료!"); renderAdminOverview(); renderAdminByStudent();
+            saveData(); alert("초기화 완료!"); renderAdminOverview(); renderAdminByStudent();
         }
     }
 
     function renderAdminStudents() {
         const list = document.getElementById('adminStudentList');
         list.innerHTML = students.map((name, idx) => `
-            <div style="background:var(--paper); border:1px solid var(--border); padding:8px 14px; border-radius:100px; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:8px;">
-                ${getEmoji(idx)} ${name} <span style="color:var(--accent); cursor:pointer; margin-left:4px;" onclick="removeStudent(${idx})">✕</span>
+            <div style="background:var(--paper); border:1px solid var(--border); padding:6px 12px; border-radius:100px; font-weight:600; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
+                ${getEmoji(idx)} ${name} <span style="color:var(--accent); cursor:pointer;" onclick="removeStudent(${idx})">✕</span>
             </div>
         `).join('');
     }
