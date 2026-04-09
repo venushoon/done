@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>다했어요! 보드 (Pro Manager)</title>
+<title>다했어요! 보드 (Ultimate Edition)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
 
 <style>
+    /* ==========================================
+       CSS Variables & Reset
+    ========================================== */
     :root {
         --ink: #0f172a;
         --ink-light: #475569;
@@ -42,9 +45,9 @@
 
     #app { display: flex; flex-direction: column; height: 100vh; position: relative; }
 
-    /* ─────────────────────────────────────────
-       TOP HEADER
-    ───────────────────────────────────────── */
+    /* ==========================================
+       Header
+    ========================================== */
     header {
         display: flex; justify-content: space-between; align-items: center;
         padding: 16px 30px; background: rgba(255, 255, 255, 0.85);
@@ -63,9 +66,9 @@
     }
     .mode-btn.active { background: var(--surface); color: var(--navy); box-shadow: var(--shadow-sm); }
 
-    /* ─────────────────────────────────────────
-       USER VIEW (STUDENT BOARD)
-    ───────────────────────────────────────── */
+    /* ==========================================
+       USER VIEW (Student Board)
+    ========================================== */
     #user-view { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
 
     .board-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; width: 100%; }
@@ -104,7 +107,7 @@
     .progress-fill { fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
     .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); transition: all 0.3s ease; }
 
-    /* 과제 개수에 따른 스케일링 */
+    /* Dynamic Scaling for 1-2 Tasks */
     .task-container[data-count="1"] .task-icon { width: 76px; height: 76px; font-size: 3rem; border-radius: 20px; }
     .task-container[data-count="1"] .task-title { font-size: 1.6rem; }
     .task-container[data-count="1"] .progress-wrap { width: 64px; height: 64px; }
@@ -132,15 +135,14 @@
     .done-emoji { font-size: 1.6rem; }
     .done-name { font-size: 0.85rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
 
-    /* ─────────────────────────────────────────
+    /* ==========================================
        FLOATING STUDENT ROSTER (Mac OS Dock Style)
-    ───────────────────────────────────────── */
+    ========================================== */
     #floating-roster {
         position: fixed; z-index: 900;
         background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
         border: 1px solid var(--border); border-radius: var(--radius-lg);
         box-shadow: var(--shadow-xl); display: flex; overflow: hidden;
-        /* transition for snapping, handled in JS */
     }
     
     .roster-header {
@@ -156,33 +158,18 @@
     .roster-btn:hover { background: var(--border); color: var(--ink); }
 
     /* Vertical (1 Column) - Left / Right */
-    #floating-roster[data-layout="vertical"] {
-        flex-direction: column; width: 170px; max-height: 75vh;
-    }
-    #floating-roster[data-layout="vertical"] .roster-header {
-        padding: 16px 15px; border-bottom: 1px solid var(--border);
-    }
+    #floating-roster[data-layout="vertical"] { flex-direction: column; width: 170px; max-height: 75vh; }
+    #floating-roster[data-layout="vertical"] .roster-header { padding: 16px 15px; border-bottom: 1px solid var(--border); }
     #floating-roster[data-layout="vertical"] .roster-title-area { flex-direction: column; align-items: flex-start; gap: 4px; }
-    #floating-roster[data-layout="vertical"] .dock-container {
-        display: grid; grid-template-columns: 1fr; padding: 15px; gap: 10px;
-        overflow-y: auto; overflow-x: hidden;
-    }
+    #floating-roster[data-layout="vertical"] .dock-container { display: grid; grid-template-columns: 1fr; padding: 15px; gap: 10px; overflow-y: auto; overflow-x: hidden; }
 
     /* Horizontal (1 Row) - Bottom */
-    #floating-roster[data-layout="horizontal"] {
-        flex-direction: column; width: 90vw; max-width: 1200px; height: auto;
-    }
-    #floating-roster[data-layout="horizontal"] .roster-header {
-        padding: 10px 20px; border-bottom: 1px solid var(--border); flex-direction: row;
-    }
+    #floating-roster[data-layout="horizontal"] { flex-direction: column; width: 90vw; max-width: 1200px; height: auto; }
+    #floating-roster[data-layout="horizontal"] .roster-header { padding: 10px 20px; border-bottom: 1px solid var(--border); flex-direction: row; }
     #floating-roster[data-layout="horizontal"] .roster-title-area { flex-direction: row; align-items: center; }
-    #floating-roster[data-layout="horizontal"] .dock-container {
-        display: flex; flex-direction: row; padding: 12px 15px; gap: 10px;
-        overflow-x: auto; overflow-y: hidden; align-items: center;
-    }
+    #floating-roster[data-layout="horizontal"] .dock-container { display: flex; flex-direction: row; padding: 12px 15px; gap: 10px; overflow-x: auto; overflow-y: hidden; align-items: center; }
     #floating-roster[data-layout="horizontal"] .draggable-chip { flex-shrink: 0; margin-bottom: 0; }
 
-    /* Custom Scrollbar for dock */
     .dock-container::-webkit-scrollbar { width: 6px; height: 6px; }
     .dock-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
@@ -195,7 +182,6 @@
     .draggable-chip:hover { background: var(--navy-light); border-color: var(--navy); }
     .draggable-chip:active { cursor: grabbing; opacity: 0.5; }
 
-    /* Dragging Ghost Clone */
     .ghost-chip {
         position: fixed; pointer-events: none; z-index: 9999;
         background: var(--surface); border: 2px solid var(--navy); border-radius: 12px;
@@ -203,9 +189,9 @@
         box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.05);
     }
 
-    /* ─────────────────────────────────────────
-       FLOATING TIMER (Top Bar Integration)
-    ───────────────────────────────────────── */
+    /* ==========================================
+       FLOATING TIMER
+    ========================================== */
     #floating-timer {
         position: fixed; z-index: 1000;
         background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 100px;
@@ -225,9 +211,9 @@
     .play-pause-btn:hover { background: #172554; }
     .play-pause-btn svg { width: 18px; height: 18px; fill: currentColor; }
 
-    /* ─────────────────────────────────────────
-       ADMIN VIEW (SIDEBAR & TABS)
-    ───────────────────────────────────────── */
+    /* ==========================================
+       ADMIN VIEW
+    ========================================== */
     #admin-view { flex-grow: 1; display: none; background: var(--paper); overflow: hidden; }
     .admin-container { display: flex; height: 100%; width: 100%; max-width: 1600px; margin: 0 auto; }
     
@@ -347,10 +333,10 @@
         </div>
     </div>
 
-    <div id="floating-roster" data-layout="vertical" style="left: 20px; top: 100px;">
+    <div id="floating-roster" data-layout="vertical" style="left: 30px; top: 100px;">
         <div class="roster-header" id="roster-drag-handle">
             <div class="roster-title-area">
-                <span class="roster-title">👇 이름표 </span>
+                <span class="roster-title">👇 이름표</span>
                 <span class="roster-count" id="totalStudentsCount">0명</span>
             </div>
             <div class="roster-controls">
@@ -387,7 +373,6 @@
                                 <button class="emoji-selector-btn" id="emojiSelectorBtn" onclick="toggleEmojiPicker()">📝</button>
                                 <div class="emoji-picker" id="emojiPicker"></div>
                             </div>
-                            
                             <input type="text" id="newTaskTitle" class="text-input" placeholder="새로운 과제 이름 입력" onkeypress="if(event.key==='Enter') addTask()">
                             <button class="btn-primary" onclick="addTask()">과제 추가</button>
                         </div>
@@ -465,7 +450,8 @@
     let students = JSON.parse(localStorage.getItem('db_students_v3')) || ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우"];
     let tasks = JSON.parse(localStorage.getItem('db_tasks_v3')) || [
         { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
-        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] }
+        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] },
+        { id: 't3', title: '수학 익힘책 12쪽', icon: '✏️', color: TASK_COLORS[2] }
     ];
     let completions = JSON.parse(localStorage.getItem('db_completions_v3')) || {};
 
@@ -529,7 +515,7 @@
     }
 
     /* ==========================================
-       이모지 픽커 (Emoji Picker) 로직
+       이모지 픽커 
     ========================================== */
     function initEmojiPicker() {
         const picker = document.getElementById('emojiPicker');
@@ -539,21 +525,12 @@
             const container = e.target.closest('.emoji-picker-container');
             if(!container) {
                 const pickerEl = document.getElementById('emojiPicker');
-                if(pickerEl && pickerEl.classList.contains('show')) {
-                    pickerEl.classList.remove('show');
-                }
+                if(pickerEl && pickerEl.classList.contains('show')) { pickerEl.classList.remove('show'); }
             }
         });
     }
-
-    function toggleEmojiPicker() {
-        document.getElementById('emojiPicker').classList.toggle('show');
-    }
-
-    function selectEmoji(emoji) {
-        document.getElementById('emojiSelectorBtn').textContent = emoji;
-        document.getElementById('emojiPicker').classList.remove('show');
-    }
+    function toggleEmojiPicker() { document.getElementById('emojiPicker').classList.toggle('show'); }
+    function selectEmoji(emoji) { document.getElementById('emojiSelectorBtn').textContent = emoji; document.getElementById('emojiPicker').classList.remove('show'); }
 
     /* ==========================================
        USER VIEW 렌더링
@@ -631,7 +608,6 @@
             if(e.target.tagName.toLowerCase() === 'button') return; 
             isDragging = true;
             
-            // 기존 Transition 제거 후 현재 좌표 고정
             rosterEl.style.transition = 'none';
             const rect = rosterEl.getBoundingClientRect();
             rosterEl.style.left = rect.left + 'px';
@@ -650,21 +626,18 @@
             rosterEl.style.left = (e.clientX - offsetX) + 'px';
             rosterEl.style.top = (e.clientY - offsetY) + 'px';
             
-            // 드래그 중 위치에 따라 레이아웃(1열/1행) 동적 변경
             const wh = window.innerHeight;
             const currentLayout = rosterEl.getAttribute('data-layout');
             
-            // 화면 하단 30% 영역으로 가면 가로(Horizontal) 1행으로 변경
             if (e.clientY > wh * 0.7 && currentLayout !== 'horizontal') {
                 rosterEl.setAttribute('data-layout', 'horizontal');
                 const newRect = rosterEl.getBoundingClientRect();
-                offsetX = e.clientX - newRect.left; offsetY = e.clientY - newRect.top; // 핸들 위치 보정
+                offsetX = e.clientX - newRect.left; offsetY = e.clientY - newRect.top; 
             } 
-            // 그 외 좌우/상단 영역에서는 세로(Vertical) 1열로 변경
             else if (e.clientY <= wh * 0.7 && currentLayout !== 'vertical') {
                 rosterEl.setAttribute('data-layout', 'vertical');
                 const newRect = rosterEl.getBoundingClientRect();
-                offsetX = e.clientX - newRect.left; offsetY = e.clientY - newRect.top; // 핸들 위치 보정
+                offsetX = e.clientX - newRect.left; offsetY = e.clientY - newRect.top; 
             }
         }
         
@@ -673,24 +646,20 @@
             document.removeEventListener('pointermove', onMove); 
             document.removeEventListener('pointerup', onUp); 
             
-            // 드래그 종료 시 가장자리에 예쁘게 붙여주는 Snap 애니메이션
             rosterEl.style.transition = 'left 0.3s ease, top 0.3s ease';
             const ww = window.innerWidth; const wh = window.innerHeight;
             const rect = rosterEl.getBoundingClientRect();
             const layout = rosterEl.getAttribute('data-layout');
             
             if (layout === 'horizontal') {
-                // 하단 스냅
                 rosterEl.style.top = (wh - rect.height - 20) + 'px';
                 rosterEl.style.left = Math.max(20, Math.min(rect.left, ww - rect.width - 20)) + 'px';
             } else {
-                // 좌우 스냅
                 if (rect.left + rect.width / 2 < ww / 2) rosterEl.style.left = '20px';
                 else rosterEl.style.left = (ww - rect.width - 20) + 'px';
                 rosterEl.style.top = Math.max(80, Math.min(rect.top, wh - rect.height - 20)) + 'px';
             }
             
-            // 애니메이션 후 트랜지션 해제
             setTimeout(() => { rosterEl.style.transition = 'none'; }, 300);
         }
     }
@@ -698,17 +667,12 @@
     function toggleRoster() {
         const dock = document.getElementById('studentDock');
         const btn = document.getElementById('toggleRosterBtn');
-        if(dock.style.display === 'none') {
-            dock.style.display = '';
-            btn.textContent = '−';
-        } else {
-            dock.style.display = 'none';
-            btn.textContent = '＋';
-        }
+        if(dock.style.display === 'none') { dock.style.display = ''; btn.textContent = '−'; } 
+        else { dock.style.display = 'none'; btn.textContent = '＋'; }
     }
 
     /* ==========================================
-       드래그 앤 드롭 (이름표 -> 과제)
+       드래그 앤 드롭 구현
     ========================================== */
     let ghost = null, dragStudentName = null, currentHoverCol = null;
 
@@ -824,7 +788,6 @@
         handle.addEventListener('pointerdown', (e) => {
             isDragging = true;
             const rect = timerEl.getBoundingClientRect();
-            // transform translateX를 해제하여 드래그 오류 방지
             timerEl.style.transform = 'none';
             timerEl.style.left = rect.left + 'px';
             timerEl.style.top = rect.top + 'px';
