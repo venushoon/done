@@ -67,13 +67,15 @@
     .mode-btn.active { background: var(--surface); color: var(--navy); box-shadow: var(--shadow-sm); }
 
     /* ==========================================
-       Floating Timer
+       Floating Timer (첫 화면: 상단 중앙 배치)
     ========================================== */
     #floating-timer {
-        position: absolute; z-index: 1000; top: 16px; left: 50%; transform: translateX(-50%);
+        position: absolute; z-index: 1000;
+        top: 16px; left: 50%; transform: translateX(-50%);
         background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
         box-shadow: var(--shadow-md); padding: 6px 16px 6px 10px;
-        display: flex; align-items: center; gap: 16px; transition: box-shadow 0.2s;
+        display: flex; align-items: center; gap: 16px;
+        transition: box-shadow 0.2s;
     }
     #floating-timer.dragging { box-shadow: var(--shadow-lg); opacity: 0.95; transition: none !important; }
     
@@ -97,7 +99,7 @@
 
     .task-container {
         display: flex; gap: 24px; width: 100%; height: 100%;
-        padding: 40px 60px 220px 60px; /* 독바 공간 확보 및 액자형 가운데 정렬 */
+        padding: 40px 60px 260px 60px; /* 독바 공간 넉넉히 확보 및 액자형 가운데 정렬 */
         overflow-x: auto; overflow-y: hidden;
         align-items: stretch; justify-content: center;
     }
@@ -163,8 +165,8 @@
     .done-name { font-size: 0.85rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
 
     /* ==========================================
-       Mac OS Dock (Floating Roster) 
-       핵심: 위치에 따른 완벽한 스크롤제로 래핑
+       Mac OS Dock (Floating Roster)
+       핵심: 좌/우 = 2열, 하단 = 2행 자동 정렬
     ========================================== */
     #floating-roster {
         position: fixed; z-index: 900;
@@ -183,60 +185,62 @@
     .roster-title { font-weight: 800; color: var(--navy); margin: 0; font-size: 1rem; }
     .roster-count { font-size: 0.75rem; color: var(--surface); font-weight: 700; background: var(--navy); padding: 4px 10px; border-radius: 100px; }
 
-    .dock-container { padding: 16px; display: flex; gap: 12px; }
-
-    /* --- SNAP: BOTTOM (기본) --- */
+    /* --- SNAP: BOTTOM (최대 2행 가로 스크롤) --- */
     #floating-roster[data-position="bottom"] {
         flex-direction: column; left: 50%; bottom: 20px; top: auto; transform: translateX(-50%);
-        border-radius: 24px; max-width: 90vw;
+        border-radius: 24px; max-width: 95vw; 
     }
     #floating-roster[data-position="bottom"] .roster-header { border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; }
     #floating-roster[data-position="bottom"] .dock-container {
-        flex-direction: row; flex-wrap: wrap; justify-content: center;
-        max-height: 35vh; /* 초과 시 자동으로 윗줄로 쌓임 */
+        display: grid;
+        grid-template-rows: repeat(2, auto); /* 최대 2행 */
+        grid-auto-flow: column; /* 오른쪽으로 추가 */
+        gap: 12px; padding: 16px 20px;
+        overflow-x: auto; overflow-y: hidden;
     }
 
-    /* --- SNAP: LEFT --- */
-    #floating-roster[data-position="left"] {
-        flex-direction: column; left: 20px; top: 50%; bottom: auto; transform: translateY(-50%);
-        border-radius: 24px;
-    }
-    #floating-roster[data-position="left"] .roster-header { border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; }
-    #floating-roster[data-position="left"] .dock-container {
-        flex-direction: column; flex-wrap: wrap; align-content: flex-start;
-        max-height: calc(100vh - 200px); /* 초과 시 자동으로 옆 열로 확장 */
-    }
-
-    /* --- SNAP: RIGHT --- */
+    /* --- SNAP: LEFT / RIGHT (최대 2열 세로 스크롤) --- */
+    #floating-roster[data-position="left"],
     #floating-roster[data-position="right"] {
-        flex-direction: column; left: auto; right: 20px; top: 50%; bottom: auto; transform: translateY(-50%);
-        border-radius: 24px;
+        flex-direction: column; top: 50%; bottom: auto; transform: translateY(-50%);
+        border-radius: 24px; max-height: 85vh; width: auto;
     }
+    #floating-roster[data-position="left"] { left: 20px; right: auto; }
+    #floating-roster[data-position="right"] { right: 20px; left: auto; }
+    
+    #floating-roster[data-position="left"] .roster-header,
     #floating-roster[data-position="right"] .roster-header { border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; }
+    #floating-roster[data-position="left"] .dock-container,
     #floating-roster[data-position="right"] .dock-container {
-        flex-direction: column; flex-wrap: wrap; align-content: flex-start;
-        max-height: calc(100vh - 200px);
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* 최대 2열 */
+        grid-auto-flow: row; /* 아래로 추가 */
+        gap: 12px; padding: 16px 20px;
+        overflow-y: auto; overflow-x: hidden;
     }
 
-    /* Mac OS Dock Hover Animation (칩 줌인 효과) */
+    /* Mac OS Dock Hover Animation */
     .dock-chip {
         background: var(--surface); border: 1px solid var(--border); border-radius: 16px; 
-        padding: 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        padding: 10px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
         font-weight: 700; font-size: 0.85rem; color: var(--ink);
         cursor: grab; user-select: none; touch-action: none; 
-        box-shadow: var(--shadow-sm); min-width: 75px; flex-shrink: 0;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), margin 0.2s, box-shadow 0.2s;
+        box-shadow: var(--shadow-sm); min-width: 80px; flex-shrink: 0;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
         will-change: transform;
     }
     .dock-chip:hover {
         transform: scale(1.25) translateY(-8px); z-index: 10;
-        margin: 0 8px; /* 마우스 올렸을 때 양옆 아이콘 밀어내기 */
         box-shadow: 0 15px 25px rgba(0,0,0,0.15);
         border-color: var(--navy); color: var(--navy);
     }
     .dock-chip:active { cursor: grabbing; transform: scale(1); opacity: 0.5; }
     .dock-emoji { font-size: 1.8rem; line-height: 1; pointer-events: none; }
     .dock-name { pointer-events: none; white-space: nowrap; }
+
+    /* Custom Scrollbar for Dock */
+    .dock-container::-webkit-scrollbar { width: 8px; height: 8px; }
+    .dock-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
     /* Dragging Ghost Clone */
     .ghost-chip {
@@ -314,6 +318,7 @@
     @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
     .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 10; border-radius: var(--radius-lg); }
 </style>
 </head>
@@ -328,21 +333,6 @@
                 <p>스스로 체크하는 우리 반 과제 관리</p>
             </div>
         </div>
-        
-        <div id="floating-timer">
-            <div class="drag-handle" id="timer-drag-handle" title="드래그하여 이동">⋮⋮</div>
-            <div class="time-display" id="timeDisplay" onclick="setTimeManually()" title="클릭하여 시간 설정">20:00</div>
-            <div class="timer-controls">
-                <button class="timer-btn" onclick="adjustTime(-1)">-1</button>
-                <button class="timer-btn play-pause-btn" id="playBtn" onclick="toggleTimer()">
-                    <svg id="icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                    <svg id="icon-pause" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                </button>
-                <button class="timer-btn" onclick="resetTimer()" title="초기화">↺</button>
-                <button class="timer-btn" onclick="adjustTime(1)">+1</button>
-            </div>
-        </div>
-
         <div class="header-right">
             <div class="mode-toggle">
                 <button class="mode-btn active" onclick="switchMode('user')" id="btn-user">🎓 학생 보드</button>
@@ -350,6 +340,20 @@
             </div>
         </div>
     </header>
+
+    <div id="floating-timer">
+        <div class="drag-handle" id="timer-drag-handle" title="드래그하여 이동">⋮⋮</div>
+        <div class="time-display" id="timeDisplay" onclick="setTimeManually()" title="클릭하여 시간 설정">20:00</div>
+        <div class="timer-controls">
+            <button class="timer-btn" onclick="adjustTime(-1)">-1</button>
+            <button class="timer-btn play-pause-btn" id="playBtn" onclick="toggleTimer()">
+                <svg id="icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <svg id="icon-pause" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </button>
+            <button class="timer-btn" onclick="resetTimer()" title="초기화">↺</button>
+            <button class="timer-btn" onclick="adjustTime(1)">+1</button>
+        </div>
+    </div>
 
     <div id="user-view">
         <div class="board-main">
@@ -360,7 +364,7 @@
     <div id="floating-roster" data-position="bottom">
         <div class="roster-header" id="roster-drag-handle">
             <div class="roster-title-area">
-                <span class="roster-title">👇 이름표 독(Dock)</span>
+                <span class="roster-title">👇 내 이름표 던지기</span>
                 <span class="roster-count" id="totalStudentsCount">0명</span>
             </div>
         </div>
@@ -456,18 +460,28 @@
     const TASK_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
     const TASK_EMOJIS = ["📝", "📖", "🥛", "🧹", "🎨", "🏃‍♂️", "🎵", "🗣️", "💡", "💯", "🍎", "⏰", "🗑️", "🧽", "🪴", "🧩", "⚽", "🍽️", "💻", "🔬", "🖍️", "🎒", "🚌", "🪥", "🦷"];
 
+    // 첫 화면 샘플: 학생 25명
     const defaultStudents = ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우","윤지호","박수아","이도현","김태희","정우진","최다은","강민지","조윤호","황서진","백도윤","권시연","송건우","이은지"];
-    let students = JSON.parse(localStorage.getItem('db_students_final_v4')) || defaultStudents;
-    let tasks = JSON.parse(localStorage.getItem('db_tasks_final_v4')) || [
+    let students = JSON.parse(localStorage.getItem('db_students_final_v5')) || defaultStudents;
+    
+    // 첫 화면 샘플: 과제 3개
+    let tasks = JSON.parse(localStorage.getItem('db_tasks_final_v5')) || [
         { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
-        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] }
+        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] },
+        { id: 't3', title: '수학 익힘책 12쪽', icon: '✏️', color: TASK_COLORS[2] }
     ];
-    let completions = JSON.parse(localStorage.getItem('db_completions_final_v4')) || {};
+    
+    // 첫 화면 샘플: 미리 제출된 내역 약간
+    let completions = JSON.parse(localStorage.getItem('db_completions_final_v5')) || {
+        't1': ['김민준', '박지우', '정윤아'],
+        't2': ['이서연'],
+        't3': []
+    };
 
     function saveData() {
-        localStorage.setItem('db_students_final_v4', JSON.stringify(students));
-        localStorage.setItem('db_tasks_final_v4', JSON.stringify(tasks));
-        localStorage.setItem('db_completions_final_v4', JSON.stringify(completions));
+        localStorage.setItem('db_students_final_v5', JSON.stringify(students));
+        localStorage.setItem('db_tasks_final_v5', JSON.stringify(tasks));
+        localStorage.setItem('db_completions_final_v5', JSON.stringify(completions));
     }
     function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
 
@@ -483,10 +497,21 @@
         initFloatingRoster(); 
         initEmojiPicker(); 
         
+        // 보드 가로 스크롤 (마우스 휠)
         const board = document.getElementById('taskGrid');
         board.addEventListener('wheel', (e) => { 
             if (e.deltaY !== 0) { e.preventDefault(); board.scrollLeft += e.deltaY; } 
         });
+        
+        // 하단 독바 가로 스크롤 (마우스 휠)
+        const studentDock = document.getElementById('studentDock');
+        studentDock.addEventListener('wheel', (e) => {
+            const rosterEl = document.getElementById('floating-roster');
+            if (rosterEl.getAttribute('data-position') === 'bottom') {
+                if (e.deltaY !== 0) { e.preventDefault(); studentDock.scrollLeft += e.deltaY; }
+            }
+        });
+
         document.body.addEventListener('click', () => { try{ if(audioCtx) audioCtx.resume(); }catch(e){} }, {once: true});
     }
 
@@ -602,7 +627,7 @@
     }
 
     /* ==========================================
-       Mac OS Dock (플로팅 위치 및 자동 래핑 계산)
+       Mac OS Dock (플로팅 위치 및 스냅 계산)
     ========================================== */
     function initFloatingRoster() {
         const rosterEl = document.getElementById('floating-roster');
@@ -614,7 +639,7 @@
             rosterEl.classList.add('dragging');
             const rect = rosterEl.getBoundingClientRect();
             
-            // Transform & data-position 해제하여 드래그 중 오차 없앰
+            // 기존 속성 해제
             rosterEl.removeAttribute('data-position');
             rosterEl.style.left = rect.left + 'px';
             rosterEl.style.top = rect.top + 'px';
@@ -642,26 +667,29 @@
             document.removeEventListener('pointermove', onMove); 
             document.removeEventListener('pointerup', onUp); 
             
-            // 중앙점 계산 후 화면 가장자리에 Snap (위치 설정)
             const rect = rosterEl.getBoundingClientRect();
             const cy = rect.top + rect.height / 2;
             const cx = rect.left + rect.width / 2;
             const ww = window.innerWidth;
             const wh = window.innerHeight;
 
-            // 인라인 스타일 해제하여 CSS의 Data-position 속성이 적용되도록 함
             rosterEl.style.left = ''; rosterEl.style.top = '';
             rosterEl.style.right = ''; rosterEl.style.bottom = '';
             rosterEl.style.transform = '';
 
+            // 가장자리에 따른 스마트 스냅
             if (cy > wh * 0.7) {
                 rosterEl.setAttribute('data-position', 'bottom');
+                rosterEl.style.left = '50%'; rosterEl.style.bottom = '30px'; rosterEl.style.transform = 'translateX(-50%)';
             } else if (cx < ww * 0.35) {
                 rosterEl.setAttribute('data-position', 'left');
+                rosterEl.style.left = '30px'; rosterEl.style.top = '50%'; rosterEl.style.transform = 'translateY(-50%)';
             } else if (cx > ww * 0.65) {
                 rosterEl.setAttribute('data-position', 'right');
+                rosterEl.style.right = '30px'; rosterEl.style.top = '50%'; rosterEl.style.transform = 'translateY(-50%)';
             } else {
                 rosterEl.setAttribute('data-position', 'bottom');
+                rosterEl.style.left = '50%'; rosterEl.style.bottom = '30px'; rosterEl.style.transform = 'translateX(-50%)';
             }
         }
     }
@@ -730,7 +758,7 @@
     }
 
     function removeCompletion(taskId, studentName) {
-        if(confirm(`${studentName} 학생의 제출을 취소할까요?`)) {
+        if(confirm(`${studentName} 학생의 기록을 취소할까요?`)) {
             completions[taskId] = completions[taskId].filter(n => n !== studentName);
             saveData(); playSound('delete'); renderUserView();
         }
