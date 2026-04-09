@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>다했어요! 보드 (Task Manager)</title>
+<title>다했어요! 보드 (Pro Manager)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
@@ -18,6 +18,7 @@
         --navy-light: #eff6ff;
         --accent: #e11d48;
         --success: #10b981;
+        --warning: #f59e0b;
         --border: #e2e8f0;
         
         --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
@@ -45,18 +46,16 @@
     ───────────────────────────────────────── */
     header {
         display: flex; justify-content: space-between; align-items: center;
-        padding: 20px 30px; background: rgba(255, 255, 255, 0.8);
+        padding: 16px 30px; background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
         z-index: 50; flex-shrink: 0;
     }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon { font-size: 2rem; }
-    .brand-text h1 { margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
+    .brand-text h1 { margin: 0; font-size: 1.4rem; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
     .brand-text p { margin: 0; font-size: 0.85rem; color: var(--ink-light); font-weight: 600; }
     
-    .mode-toggle {
-        display: flex; background: var(--paper); border-radius: 100px; padding: 4px; border: 1px solid var(--border);
-    }
+    .mode-toggle { display: flex; background: var(--paper); border-radius: 100px; padding: 4px; border: 1px solid var(--border); }
     .mode-btn {
         padding: 8px 20px; border: none; background: transparent; border-radius: 100px;
         font-weight: 700; color: var(--ink-light); cursor: pointer; transition: 0.2s; font-size: 0.95rem;
@@ -66,158 +65,188 @@
     /* ─────────────────────────────────────────
        USER VIEW (STUDENT BOARD)
     ───────────────────────────────────────── */
-    #user-view { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #user-view { flex-grow: 1; display: flex; overflow: hidden; }
 
-    /* Task Grid Layout (1~6 Columns) */
+    /* Main Board (1x6 Horizontal Scroll) */
+    .board-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    
     .task-container {
-        flex-grow: 1; padding: 20px 30px; overflow-y: auto;
-        display: grid; gap: 20px; align-content: start;
-    }
-    .task-container[data-count="1"] { grid-template-columns: max-content; justify-content: center; }
-    .task-container[data-count="1"] .task-col { width: 400px; }
-    .task-container[data-count="2"] { grid-template-columns: repeat(2, 1fr); max-width: 1000px; margin: 0 auto; }
-    .task-container[data-count="3"] { grid-template-columns: repeat(3, 1fr); max-width: 1200px; margin: 0 auto; }
-    .task-container[data-count="4"] { grid-template-columns: repeat(4, 1fr); }
-    .task-container[data-count="5"] { grid-template-columns: repeat(5, 1fr); }
-    .task-container[data-count="6"] { grid-template-columns: repeat(3, 1fr); } /* 2 rows of 3 */
-
-    /* Task Column */
-    .task-col {
-        background: rgba(255, 255, 255, 0.75); border: 2px solid var(--surface);
-        border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
-        display: flex; flex-direction: column; height: 100%; min-height: 400px;
-        position: relative; transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .task-col.drag-over {
-        transform: scale(1.02); border-color: var(--navy); box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1);
-        background: rgba(255, 255, 255, 0.95);
+        flex-grow: 1; padding: 24px; overflow-x: auto; overflow-y: hidden;
+        display: flex; gap: 20px; align-items: stretch;
     }
     
-    .task-header {
-        padding: 20px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px;
+    /* Scrollbar Styling for Task Container */
+    .task-container::-webkit-scrollbar { height: 10px; }
+    .task-container::-webkit-scrollbar-track { background: transparent; }
+    .task-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid var(--paper); }
+
+    .task-col {
+        flex: 0 0 280px; /* 고정 너비로 한 줄 정렬 */
+        background: rgba(255, 255, 255, 0.85); border: 2px solid var(--surface);
+        border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+        display: flex; flex-direction: column; position: relative; 
+        transition: box-shadow 0.2s ease, border-color 0.2s ease; /* transform 제거로 깜빡임 방지 */
     }
+    .task-col.drag-over {
+        border-color: var(--navy); 
+        box-shadow: inset 0 0 0 2px var(--navy), var(--shadow-lg); 
+        background: var(--surface);
+    }
+    
+    .task-header { padding: 20px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; }
     .task-icon {
-        width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+        width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
         font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
     }
     .task-info { flex-grow: 1; }
     .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; }
     
     /* Progress Ring */
-    .progress-wrap { position: relative; width: 46px; height: 46px; flex-shrink: 0; }
+    .progress-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; }
     .progress-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
     .progress-bg { fill: none; stroke: var(--paper); stroke-width: 4; }
     .progress-fill { fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
     .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); }
 
-    /* Drop Zone (Completed Students) */
     .task-body {
         padding: 16px; flex-grow: 1; overflow-y: auto;
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; align-content: start;
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-content: start;
     }
     
     .done-chip {
         background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
-        padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        padding: 10px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px;
         box-shadow: var(--shadow-sm); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        cursor: pointer; position: relative;
+        cursor: pointer; position: relative; overflow: hidden;
     }
     .done-chip:hover::after {
-        content: '✕ 삭제'; position: absolute; inset: 0; background: rgba(225, 29, 72, 0.9); color: white;
-        border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
-        font-size: 0.8rem; font-weight: bold; animation: fadeIn 0.2s;
+        content: '✕ 취소'; position: absolute; inset: 0; background: rgba(225, 29, 72, 0.9); color: white;
+        display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; animation: fadeIn 0.2s;
     }
     .done-emoji { font-size: 1.5rem; }
-    .done-name { font-size: 0.8rem; font-weight: 700; color: var(--ink); }
+    .done-name { font-size: 0.8rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
 
-    /* Bottom Dock (Student Roster) */
-    .dock-wrapper {
-        background: var(--surface); border-top: 1px solid var(--border);
-        padding: 20px; z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
+    /* Right Sidebar (Student Roster) */
+    .student-sidebar {
+        width: 340px; background: var(--surface); border-left: 1px solid var(--border);
+        display: flex; flex-direction: column; z-index: 40; box-shadow: -2px 0 20px rgba(0,0,0,0.02);
     }
-    .dock-title { font-size: 0.9rem; font-weight: 700; color: var(--ink-light); margin-bottom: 12px; display: flex; justify-content: space-between; }
+    .sidebar-title { padding: 20px; font-size: 1rem; font-weight: 800; color: var(--navy); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
     
     .dock-container {
-        display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none;
+        flex-grow: 1; padding: 20px; overflow-y: auto;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start;
     }
-    .dock-container::-webkit-scrollbar { display: none; }
     
     .draggable-chip {
-        min-width: 100px; background: var(--paper); border: 1px solid var(--border);
-        border-radius: 100px; padding: 10px 16px; display: flex; align-items: center; gap: 8px;
-        font-weight: 700; font-size: 1rem; cursor: grab; user-select: none; touch-action: none;
-        transition: transform 0.2s, box-shadow 0.2s; flex-shrink: 0;
+        background: var(--paper); border: 1px solid var(--border); border-radius: 12px; 
+        padding: 12px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; 
+        cursor: grab; user-select: none; touch-action: none; transition: background 0.2s;
     }
-    .draggable-chip:active { cursor: grabbing; transform: scale(0.95); }
+    .draggable-chip:hover { background: var(--navy-light); border-color: var(--navy); }
+    .draggable-chip:active { cursor: grabbing; opacity: 0.5; }
     
     /* Dragging Ghost Clone */
     .ghost-chip {
         position: fixed; pointer-events: none; z-index: 9999;
-        background: var(--surface); border: 2px solid var(--navy); border-radius: 100px;
-        padding: 10px 16px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1rem;
-        box-shadow: var(--shadow-lg); opacity: 0.9; transform: translate(-50%, -50%) scale(1.1);
+        background: var(--surface); border: 2px solid var(--navy); border-radius: 12px;
+        padding: 12px 20px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem;
+        box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.05);
     }
 
     /* ─────────────────────────────────────────
-       ADMIN VIEW (TEACHER DASHBOARD)
+       FLOATING TIMER
     ───────────────────────────────────────── */
-    #admin-view {
-        flex-grow: 1; padding: 30px; overflow-y: auto; display: none; background: #f1f5f9;
+    #floating-timer {
+        position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 1000;
+        background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 8px 20px 8px 12px;
+        display: flex; align-items: center; gap: 16px;
     }
-    .admin-grid {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 1400px; margin: 0 auto;
-    }
-    .admin-panel {
-        background: var(--surface); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-md);
-    }
-    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .panel-title { font-size: 1.2rem; font-weight: 800; color: var(--navy); margin: 0; }
+    .drag-handle { cursor: grab; padding: 10px; color: var(--ink-light); font-size: 1.2rem; line-height: 0.5; user-select: none; touch-action: none;}
+    .drag-handle:active { cursor: grabbing; color: var(--navy); }
     
-    /* 1. Task Settings */
-    .task-edit-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-    .task-edit-item {
-        display: flex; gap: 10px; align-items: center; background: var(--paper); padding: 12px; border-radius: var(--radius-md);
-    }
-    .icon-input { width: 50px; text-align: center; font-size: 1.5rem; }
-    .text-input { flex-grow: 1; }
-    .btn-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .btn-danger { background: #ffe4e6; color: var(--accent); }
-    .btn-danger:hover { background: var(--accent); color: white; }
-
-    /* 2. Insight Panel (Missing Students) */
-    .insight-list { display: flex; flex-direction: column; gap: 16px; }
-    .insight-item { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
-    .insight-header { background: var(--paper); padding: 12px 16px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-    .insight-body { padding: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
-    .missing-chip {
-        background: #fff1f2; color: var(--accent); border: 1px solid #fecdd3;
-        padding: 6px 12px; border-radius: 100px; font-size: 0.85rem; font-weight: 700;
-        display: flex; align-items: center; gap: 4px;
-    }
-    .all-done-msg { color: var(--success); font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; }
-
-    /* Inputs & Buttons */
-    .input-box { border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); outline: none; font-size: 0.95rem; font-family: inherit; }
-    .input-box:focus { border-color: var(--navy); }
-    .btn-primary { background: var(--navy); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; }
-    .btn-primary:hover { background: #172554; }
+    .time-display { font-family: 'DM Sans', sans-serif; font-size: 2rem; font-weight: 800; color: var(--ink); letter-spacing: -1px; font-variant-numeric: tabular-nums; cursor: pointer; }
+    .time-display.warning { color: var(--accent); animation: pulse 1s infinite; }
+    
+    .timer-controls { display: flex; gap: 6px; align-items: center; }
+    .timer-btn { width: 36px; height: 36px; border: none; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: var(--ink-light); transition: 0.2s; }
+    .timer-btn:hover { background: var(--border); color: var(--ink); }
+    .play-pause-btn { width: 44px; height: 44px; background: var(--navy); color: white; box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3); }
+    .play-pause-btn:hover { background: #172554; }
+    .play-pause-btn svg { width: 18px; height: 18px; fill: currentColor; }
 
     /* ─────────────────────────────────────────
-       ANIMATIONS & MEDIA QUERIES
+       ADMIN VIEW (SIDEBAR & TABS)
     ───────────────────────────────────────── */
+    #admin-view { flex-grow: 1; display: none; background: var(--paper); overflow: hidden; }
+    .admin-container { display: flex; height: 100%; width: 100%; max-width: 1600px; margin: 0 auto; }
+    
+    .admin-sidebar {
+        width: 260px; background: var(--surface); border-right: 1px solid var(--border);
+        padding: 20px 0; display: flex; flex-direction: column; gap: 5px;
+    }
+    .admin-tab-btn {
+        padding: 16px 24px; text-align: left; background: transparent; border: none; font-size: 1.05rem;
+        font-weight: 700; color: var(--ink-light); cursor: pointer; transition: 0.2s;
+        border-left: 4px solid transparent; display: flex; align-items: center; gap: 10px;
+    }
+    .admin-tab-btn:hover { background: var(--paper); color: var(--ink); }
+    .admin-tab-btn.active { background: var(--navy-light); color: var(--navy); border-left-color: var(--navy); }
+    
+    .admin-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
+    .tab-pane { display: none; animation: fadeIn 0.3s; max-width: 1000px; }
+    .tab-pane.active { display: block; }
+    
+    .panel-title { font-size: 1.4rem; font-weight: 800; color: var(--navy); margin: 0 0 24px 0; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Admin Tab 1: Task & Students */
+    .admin-card { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 24px; }
+    .task-edit-item { display: flex; gap: 10px; align-items: center; background: var(--paper); padding: 12px; border-radius: var(--radius-md); margin-bottom: 8px; }
+    .icon-input { width: 50px; text-align: center; font-size: 1.5rem; }
+    .text-input { flex-grow: 1; border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); outline: none; font-size: 0.95rem; font-family: inherit; }
+    .text-input:focus { border-color: var(--navy); }
+    .btn-primary { background: var(--navy); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .btn-primary:hover { background: #172554; }
+    .btn-danger-sm { background: #ffe4e6; color: var(--accent); border: none; width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; }
+
+    /* Admin Tab 2: Overview */
+    .insight-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 24px; }
+    .insight-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+    .insight-header { background: var(--paper); padding: 16px 20px; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid var(--border); }
+    .status-section { padding: 16px 20px; border-bottom: 1px dashed var(--border); }
+    .status-section:last-child { border-bottom: none; }
+    .status-title { font-size: 0.9rem; font-weight: 800; color: var(--ink-light); margin-bottom: 10px; }
+    .chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { padding: 6px 12px; border-radius: 100px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .chip.done { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
+    .chip.missing { background: #ffe4e6; color: var(--accent); border: 1px solid #fecdd3; }
+
+    /* Admin Tab 3: By Student */
+    .student-record-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+    .student-record-table th, .student-record-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    .student-record-table th { background: var(--paper); font-weight: 800; color: var(--ink-light); }
+    .student-record-table tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-right: 4px; margin-bottom: 4px; }
+    .badge.o { background: var(--success); color: white; }
+    .badge.x { background: var(--paper); color: var(--ink-light); text-decoration: line-through; }
+
     @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     
-    /* Confetti Canvas */
     .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 10; border-radius: var(--radius-lg); }
 
-    @media (max-width: 1024px) {
-        .task-container[data-count="4"], .task-container[data-count="5"], .task-container[data-count="6"] { grid-template-columns: repeat(2, 1fr); }
-        .admin-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 600px) {
-        .task-container[data-count] { grid-template-columns: 1fr; }
-        header { padding: 15px; flex-direction: column; gap: 15px; }
+    @media (max-width: 768px) {
+        header { flex-direction: column; gap: 15px; padding: 15px; }
+        #user-view { flex-direction: column; }
+        .student-sidebar { width: 100%; height: 250px; border-left: none; border-top: 1px solid var(--border); flex-shrink: 0; }
+        .admin-container { flex-direction: column; }
+        .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; overflow-x: auto; padding: 0; }
+        .admin-tab-btn { border-left: none; border-bottom: 4px solid transparent; white-space: nowrap; }
+        .admin-tab-btn.active { border-left-color: transparent; border-bottom-color: var(--navy); }
+        .task-col { flex: 0 0 240px; }
+        #floating-timer { transform: scale(0.8) translateX(-50%); top: auto; bottom: 20px; transform-origin: bottom center;}
     }
 </style>
 </head>
@@ -233,65 +262,96 @@
             </div>
         </div>
         <div class="mode-toggle">
-            <button class="mode-btn active" onclick="switchMode('user')" id="btn-user">🎓 학생 제출 보드</button>
+            <button class="mode-btn active" onclick="switchMode('user')" id="btn-user">🎓 학생 보드</button>
             <button class="mode-btn" onclick="switchMode('admin')" id="btn-admin">🔒 교사 관리자</button>
         </div>
     </header>
 
-    <div id="user-view">
-        <div class="task-container" id="taskGrid" data-count="3">
-            </div>
-
-        <div class="dock-wrapper">
-            <div class="dock-title">
-                <span>👇 내 이름표를 꾹 눌러서 완료한 과제 위로 던져주세요!</span>
-                <span id="totalStudentsCount">총 0명</span>
-            </div>
-            <div class="dock-container" id="studentDock">
-                </div>
+    <div id="floating-timer">
+        <div class="drag-handle" id="timer-drag-handle" title="드래그하여 이동">⋮⋮</div>
+        <div class="time-display" id="timeDisplay" onclick="setTimeManually()" title="클릭하여 시간 설정">20:00</div>
+        <div class="timer-controls">
+            <button class="timer-btn" onclick="adjustTime(-1)">-1</button>
+            <button class="timer-btn play-pause-btn" id="playBtn" onclick="toggleTimer()">
+                <svg id="icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <svg id="icon-pause" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </button>
+            <button class="timer-btn" onclick="resetTimer()" title="초기화">↺</button>
+            <button class="timer-btn" onclick="adjustTime(1)">+1</button>
         </div>
     </div>
 
+    <div id="user-view">
+        <div class="board-main">
+            <div class="task-container" id="taskGrid"></div>
+        </div>
+
+        <aside class="student-sidebar">
+            <div class="sidebar-title">
+                <span>👇 내 이름표 던지기</span>
+                <span id="totalStudentsCount" style="color:var(--ink-light)">총 0명</span>
+            </div>
+            <div class="dock-container" id="studentDock"></div>
+        </aside>
+    </div>
+
     <div id="admin-view">
-        <div class="admin-grid">
-            <div class="admin-panel">
-                <div class="panel-header">
-                    <h2 class="panel-title">📝 과제 설정 (최대 6개)</h2>
-                    <button class="btn-primary" onclick="resetAllCompletions()" style="background:var(--accent)">전체 제출 기록 초기화</button>
-                </div>
-                <div class="task-edit-list" id="adminTaskList"></div>
-                <div style="display:flex; gap:10px; margin-top: 15px;">
-                    <input type="text" id="newTaskIcon" class="input-box icon-input" placeholder="이모지" value="📝">
-                    <input type="text" id="newTaskTitle" class="input-box text-input" placeholder="새로운 과제 이름 입력" onkeypress="if(event.key==='Enter') addTask()">
-                    <button class="btn-primary" onclick="addTask()">추가</button>
-                </div>
-            </div>
+        <div class="admin-container">
+            <aside class="admin-sidebar">
+                <button class="admin-tab-btn active" onclick="switchAdminTab('tab-settings', this)">📝 과제 및 명단 설정</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('tab-overview', this)">👀 한눈에 보기</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('tab-bystudent', this)">🧑‍🎓 학생별 보기</button>
+            </aside>
+            
+            <main class="admin-content">
+                <div id="tab-settings" class="tab-pane active">
+                    <h2 class="panel-title">과제 및 명단 설정 <button class="btn-primary" onclick="resetAllCompletions()" style="background:var(--accent); font-size:0.9rem;">전체 제출기록 초기화</button></h2>
+                    
+                    <div class="admin-card">
+                        <h3 style="margin-top:0; color:var(--ink-light);">1. 과제 목록 (최대 6개)</h3>
+                        <div id="adminTaskList" style="margin-bottom: 15px;"></div>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="newTaskIcon" class="text-input" style="width:60px; text-align:center; font-size:1.2rem;" placeholder="이모지" value="📝">
+                            <input type="text" id="newTaskTitle" class="text-input" placeholder="새로운 과제 이름 입력" onkeypress="if(event.key==='Enter') addTask()">
+                            <button class="btn-primary" onclick="addTask()">추가</button>
+                        </div>
+                    </div>
 
-            <div class="admin-panel">
-                <div class="panel-header">
-                    <h2 class="panel-title">👀 미제출자 한눈에 보기</h2>
-                    <button class="btn-icon" style="background:var(--paper)" onclick="renderAdminInsights()" title="새로고침">🔄</button>
+                    <div class="admin-card">
+                        <h3 style="margin-top:0; color:var(--ink-light);">2. 학생 명단 관리</h3>
+                        <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                            <input type="text" id="newStudentName" class="text-input" placeholder="학생 이름 입력" onkeypress="if(event.key==='Enter') addStudent()">
+                            <button class="btn-primary" onclick="addStudent()">학생 추가</button>
+                        </div>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px;" id="adminStudentList"></div>
+                    </div>
                 </div>
-                <div class="insight-list" id="adminInsights"></div>
-            </div>
 
-            <div class="admin-panel">
-                <div class="panel-header">
-                    <h2 class="panel-title">🧑‍🏫 학생 명단 관리</h2>
+                <div id="tab-overview" class="tab-pane">
+                    <h2 class="panel-title">한눈에 보기 (제출 현황) <button class="btn-primary" onclick="renderAdminOverview()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
+                    <div class="insight-grid" id="adminOverviewContent"></div>
                 </div>
-                <div style="display:flex; gap:10px; margin-bottom: 15px;">
-                    <input type="text" id="newStudentName" class="input-box text-input" placeholder="학생 이름 입력" onkeypress="if(event.key==='Enter') addStudent()">
-                    <button class="btn-primary" onclick="addStudent()">추가</button>
+
+                <div id="tab-bystudent" class="tab-pane">
+                    <h2 class="panel-title">학생별 기록 확인 <button class="btn-primary" onclick="renderAdminByStudent()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
+                    <table class="student-record-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 150px;">학생 이름</th>
+                                <th>과제 달성 현황</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminByStudentContent"></tbody>
+                    </table>
                 </div>
-                <div style="display:flex; flex-wrap:wrap; gap:8px;" id="adminStudentList"></div>
-            </div>
+            </main>
         </div>
     </div>
 </div>
 
 <script>
     /* ==========================================
-       사운드 엔진 (팝 소리 & 환호성)
+       사운드 엔진 
     ========================================== */
     let audioCtx;
     function playSound(type) {
@@ -304,12 +364,10 @@
             const now = audioCtx.currentTime;
 
             if (type === 'drop') {
-                // 경쾌하게 쏙 들어가는 소리
                 osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1500, now + 0.1);
                 gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
                 osc.start(now); osc.stop(now + 0.1);
             } else if (type === 'delete') {
-                // 뽁! 빠지는 소리
                 osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
                 gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
                 osc.start(now); osc.stop(now + 0.1);
@@ -322,51 +380,41 @@
     }
 
     /* ==========================================
-       데이터 상태 (State)
+       데이터 상태 설정
     ========================================== */
     const EMOJIS = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐢","🐸","🐵","🐧","🐥","🐬","🦔","🦉"];
     const TASK_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
 
-    let students = JSON.parse(localStorage.getItem('db_students')) || ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우"];
-    
-    // 기본 과제 세팅
-    let tasks = JSON.parse(localStorage.getItem('db_tasks')) || [
+    let students = JSON.parse(localStorage.getItem('db_students_v2')) || ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우"];
+    let tasks = JSON.parse(localStorage.getItem('db_tasks_v2')) || [
         { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
         { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] },
-        { id: 't3', title: '수학 익힘책 12쪽', icon: '✏️', color: TASK_COLORS[2] }
+        { id: 't3', title: '수학 익힘책 12쪽', icon: '✏️', color: TASK_COLORS[2] },
+        { id: 't4', title: '알림장 제출', icon: '📝', color: TASK_COLORS[3] }
     ];
+    let completions = JSON.parse(localStorage.getItem('db_completions_v2')) || {};
 
-    // 완료 기록: { taskId: [studentName1, studentName2] }
-    let completions = JSON.parse(localStorage.getItem('db_completions')) || {};
-
-    /* ==========================================
-       유틸리티 함수
-    ========================================== */
     function saveData() {
-        localStorage.setItem('db_students', JSON.stringify(students));
-        localStorage.setItem('db_tasks', JSON.stringify(tasks));
-        localStorage.setItem('db_completions', JSON.stringify(completions));
+        localStorage.setItem('db_students_v2', JSON.stringify(students));
+        localStorage.setItem('db_tasks_v2', JSON.stringify(tasks));
+        localStorage.setItem('db_completions_v2', JSON.stringify(completions));
     }
-
     function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
 
     /* ==========================================
-       초기화 및 렌더링
+       초기화
     ========================================== */
     function init() {
-        // 기존 완료 데이터 중 삭제된 과제나 학생 정리
         tasks.forEach(t => { if (!completions[t.id]) completions[t.id] = []; });
-        for (let tid in completions) {
-            completions[tid] = completions[tid].filter(s => students.includes(s));
-        }
+        for (let tid in completions) { completions[tid] = completions[tid].filter(s => students.includes(s)); }
         
         renderUserView();
+        initFloatingTimer();
         
-        // 휠 가로스크롤 지원 (대기소)
-        const dock = document.getElementById('studentDock');
-        dock.addEventListener('wheel', (e) => { if (e.deltaY !== 0) { e.preventDefault(); dock.scrollLeft += e.deltaY; } });
+        // 가로 스크롤 (마우스 휠 지원)
+        const board = document.getElementById('taskGrid');
+        board.addEventListener('wheel', (e) => { if (e.deltaY !== 0) { e.preventDefault(); board.scrollLeft += e.deltaY; } });
         
-        // 오디오 초기화
         document.body.addEventListener('click', () => { try{ if(audioCtx) audioCtx.resume(); }catch(e){} }, {once: true});
     }
 
@@ -375,10 +423,10 @@
             const pwd = prompt("관리자 암호를 입력하세요 (기본: 0000)");
             if (pwd !== '0000') { alert("암호가 틀렸습니다."); return; }
             document.getElementById('user-view').style.display = 'none';
-            document.getElementById('admin-view').style.display = 'block';
+            document.getElementById('admin-view').style.display = 'flex';
             document.getElementById('btn-user').classList.remove('active');
             document.getElementById('btn-admin').classList.add('active');
-            renderAdminView();
+            renderAdminTasks(); renderAdminStudents(); renderAdminOverview(); renderAdminByStudent();
         } else {
             document.getElementById('user-view').style.display = 'flex';
             document.getElementById('admin-view').style.display = 'none';
@@ -388,27 +436,34 @@
         }
     }
 
+    function switchAdminTab(tabId, btnEl) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btnEl.classList.add('active');
+        
+        if(tabId === 'tab-overview') renderAdminOverview();
+        if(tabId === 'tab-bystudent') renderAdminByStudent();
+    }
+
     /* ==========================================
-       USER VIEW 렌더링 (학생 화면)
+       USER VIEW 렌더링
     ========================================== */
     function renderUserView() {
         const grid = document.getElementById('taskGrid');
-        grid.setAttribute('data-count', tasks.length);
         grid.innerHTML = '';
 
         tasks.forEach(task => {
             const completedCount = completions[task.id].length;
             const totalCount = students.length;
             const pct = totalCount ? (completedCount / totalCount) : 0;
-            const dashArray = 2 * Math.PI * 18; // 113.1
+            const dashArray = 2 * Math.PI * 18;
 
             const col = document.createElement('div');
             col.className = 'task-col';
             col.id = `task-col-${task.id}`;
             col.setAttribute('data-task-id', task.id);
-            col.style.setProperty('--task-color', task.color);
 
-            // 렌더링: 헤더 + 드롭존 바디
             col.innerHTML = `
                 <div class="task-header">
                     <div class="task-icon" style="background:${task.color}15; color:${task.color}">${task.icon}</div>
@@ -449,32 +504,25 @@
             const chip = document.createElement('div');
             chip.className = 'draggable-chip';
             chip.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
-            
-            // 드래그 이벤트 부착 (커스텀 구현)
             chip.addEventListener('pointerdown', (e) => startDrag(e, name, idx, chip));
             dock.appendChild(chip);
         });
     }
 
     /* ==========================================
-       드래그 앤 드롭 구현 (커스텀 Pointer Events)
+       드래그 앤 드롭 구현 (고스트 & 충돌 방지)
     ========================================== */
-    let ghost = null;
-    let dragStudentName = null;
-    let currentHoverCol = null;
+    let ghost = null, dragStudentName = null, currentHoverCol = null;
 
     function startDrag(e, name, idx, sourceEl) {
-        e.preventDefault();
-        dragStudentName = name;
+        e.preventDefault(); dragStudentName = name;
         
-        // 고스트 엘리먼트 생성
         ghost = document.createElement('div');
         ghost.className = 'ghost-chip';
         ghost.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
         document.body.appendChild(ghost);
         
         moveGhost(e);
-        
         document.addEventListener('pointermove', onDragMove, {passive: false});
         document.addEventListener('pointerup', onDragEnd);
     }
@@ -483,19 +531,15 @@
         if(!ghost) return;
         const x = e.clientX || (e.touches && e.touches[0].clientX);
         const y = e.clientY || (e.touches && e.touches[0].clientY);
-        ghost.style.left = x + 'px';
-        ghost.style.top = y + 'px';
+        ghost.style.left = x + 'px'; ghost.style.top = y + 'px';
     }
 
     function onDragMove(e) {
-        e.preventDefault();
-        moveGhost(e);
-        
+        e.preventDefault(); moveGhost(e);
         const x = e.clientX || (e.touches && e.touches[0].clientX);
         const y = e.clientY || (e.touches && e.touches[0].clientY);
         
-        // 고스트를 잠시 숨기고 아래에 있는 엘리먼트 파악
-        ghost.style.display = 'none';
+        ghost.style.display = 'none'; // 잠시 숨기고 아래 판별
         const elemBelow = document.elementFromPoint(x, y);
         ghost.style.display = 'flex';
         
@@ -509,9 +553,7 @@
     }
 
     function onDragEnd(e) {
-        document.removeEventListener('pointermove', onDragMove);
-        document.removeEventListener('pointerup', onDragEnd);
-        
+        document.removeEventListener('pointermove', onDragMove); document.removeEventListener('pointerup', onDragEnd);
         if (ghost) { ghost.remove(); ghost = null; }
         if (currentHoverCol) {
             currentHoverCol.classList.remove('drag-over');
@@ -522,36 +564,23 @@
         dragStudentName = null;
     }
 
-    /* ==========================================
-       제출 및 삭제 처리 로직
-    ========================================== */
     function handleDrop(taskId, studentName) {
         if (!completions[taskId]) completions[taskId] = [];
+        if (completions[taskId].includes(studentName)) { playSound('error'); return; }
         
-        if (completions[taskId].includes(studentName)) {
-            playSound('error');
-            return; // 이미 제출함
-        }
-        
-        // 제출 성공
         completions[taskId].push(studentName);
-        saveData();
-        playSound('drop');
-        fireConfetti(taskId);
-        renderUserView();
+        saveData(); playSound('drop'); fireConfetti(taskId); renderUserView();
     }
 
     function removeCompletion(taskId, studentName) {
-        if(confirm(`${studentName} 학생의 제출 기록을 취소할까요?`)) {
+        if(confirm(`${studentName} 학생의 기록을 취소할까요?`)) {
             completions[taskId] = completions[taskId].filter(n => n !== studentName);
-            saveData();
-            playSound('delete');
-            renderUserView();
+            saveData(); playSound('delete'); renderUserView();
         }
     }
 
     /* ==========================================
-       폭죽 파티클 효과 (Confetti)
+       폭죽 효과
     ========================================== */
     function fireConfetti(taskId) {
         const canvas = document.getElementById(`canvas-${taskId}`);
@@ -564,10 +593,8 @@
         
         for(let i=0; i<30; i++) {
             particles.push({
-                x: canvas.width / 2, y: canvas.height - 20,
-                r: Math.random() * 5 + 3,
-                dx: Math.random() * 10 - 5,
-                dy: Math.random() * -10 - 5,
+                x: canvas.width / 2, y: canvas.height - 20, r: Math.random() * 5 + 3,
+                dx: Math.random() * 10 - 5, dy: Math.random() * -12 - 5,
                 color: colors[Math.floor(Math.random() * colors.length)]
             });
         }
@@ -577,131 +604,180 @@
             let active = false;
             particles.forEach(p => {
                 p.x += p.dx; p.y += p.dy; p.dy += 0.5; // 중력
-                if(p.y < canvas.height) { active = true; }
+                if(p.y < canvas.height) active = true;
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
                 ctx.fillStyle = p.color; ctx.fill();
             });
-            if(active) requestAnimationFrame(animate);
-            else ctx.clearRect(0,0,canvas.width,canvas.height);
+            if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height);
         }
         animate();
     }
 
     /* ==========================================
-       ADMIN VIEW 렌더링 (교사 화면)
+       플로팅 타이머 (Drag & Drop)
     ========================================== */
-    function renderAdminView() {
-        renderAdminTasks();
-        renderAdminInsights();
-        renderAdminStudents();
+    let totalSeconds = 20 * 60, timeRemaining = totalSeconds, timerInterval = null, isPlaying = false;
+    
+    function initFloatingTimer() {
+        const timerEl = document.getElementById('floating-timer');
+        const handle = document.getElementById('timer-drag-handle');
+        let isDragging = false, offsetX, offsetY;
+
+        handle.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            const rect = timerEl.getBoundingClientRect();
+            // transform이 적용되어 있으므로 초기 드래그 시 transform 제거 후 고정
+            timerEl.style.transform = 'none';
+            timerEl.style.left = rect.left + 'px';
+            timerEl.style.top = rect.top + 'px';
+            
+            offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', onUp);
+        });
+
+        function onMove(e) {
+            if(!isDragging) return;
+            timerEl.style.left = (e.clientX - offsetX) + 'px';
+            timerEl.style.top = (e.clientY - offsetY) + 'px';
+        }
+        function onUp() { isDragging = false; document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); }
+        updateTimerDisplay();
     }
 
-    // 1. 과제 설정
+    function updateTimerDisplay() {
+        const m = String(Math.floor(timeRemaining / 60)).padStart(2, '0');
+        const s = String(timeRemaining % 60).padStart(2, '0');
+        const display = document.getElementById('timeDisplay');
+        display.textContent = `${m}:${s}`;
+        display.classList.toggle('warning', timeRemaining <= 60 && timeRemaining > 0);
+    }
+    function setTimeManually() {
+        if(isPlaying) toggleTimer();
+        const input = prompt("설정할 시간을 분 단위로 입력하세요 (예: 15)", Math.floor(timeRemaining / 60));
+        if (input && !isNaN(input) && parseInt(input) > 0) { timeRemaining = parseInt(input) * 60; updateTimerDisplay(); }
+    }
+    function adjustTime(min) { timeRemaining = Math.max(0, timeRemaining + min * 60); updateTimerDisplay(); }
+    function toggleTimer() {
+        const iconPlay = document.getElementById('icon-play'), iconPause = document.getElementById('icon-pause');
+        if (isPlaying) {
+            clearInterval(timerInterval); iconPlay.style.display = 'block'; iconPause.style.display = 'none';
+        } else {
+            if (timeRemaining <= 0) return;
+            timerInterval = setInterval(() => {
+                timeRemaining--; updateTimerDisplay();
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval); isPlaying = false;
+                    iconPlay.style.display = 'block'; iconPause.style.display = 'none';
+                    playSound('alert'); setTimeout(() => alert("⏰ 시간이 종료되었습니다!"), 100);
+                }
+            }, 1000);
+            iconPlay.style.display = 'none'; iconPause.style.display = 'block';
+        }
+        isPlaying = !isPlaying;
+    }
+    function resetTimer() {
+        clearInterval(timerInterval); isPlaying = false;
+        document.getElementById('icon-play').style.display = 'block'; document.getElementById('icon-pause').style.display = 'none';
+        timeRemaining = 20 * 60; updateTimerDisplay();
+    }
+
+    /* ==========================================
+       ADMIN VIEW 렌더링
+    ========================================== */
+    // 1. Task Settings
     function renderAdminTasks() {
         const list = document.getElementById('adminTaskList');
-        list.innerHTML = tasks.map((t, idx) => `
+        list.innerHTML = tasks.map(t => `
             <div class="task-edit-item">
                 <span class="icon-input">${t.icon}</span>
-                <span class="text-input" style="font-weight:700">${t.title}</span>
-                <button class="btn-icon" style="background:#f1f5f9" onclick="resetSingleTask('${t.id}')" title="이 과제만 초기화">🔄</button>
-                <button class="btn-icon btn-danger" onclick="removeTask('${t.id}')" title="삭제">✕</button>
+                <span style="flex-grow:1; font-weight:700">${t.title}</span>
+                <button class="btn-danger-sm" onclick="removeTask('${t.id}')" title="삭제">✕</button>
             </div>
         `).join('');
     }
-
     function addTask() {
         if(tasks.length >= 6) { alert("과제는 최대 6개까지만 만들 수 있습니다."); return; }
         const title = document.getElementById('newTaskTitle').value.trim();
         const icon = document.getElementById('newTaskIcon').value.trim() || '📝';
         if(title) {
             const newId = 't' + Date.now();
-            const newColor = TASK_COLORS[tasks.length % TASK_COLORS.length];
-            tasks.push({ id: newId, title, icon, color: newColor });
-            completions[newId] = [];
-            document.getElementById('newTaskTitle').value = '';
-            saveData(); renderAdminTasks(); renderAdminInsights();
+            tasks.push({ id: newId, title, icon, color: TASK_COLORS[tasks.length % TASK_COLORS.length] });
+            completions[newId] = []; document.getElementById('newTaskTitle').value = '';
+            saveData(); renderAdminTasks();
         }
     }
-
     function removeTask(id) {
         if(confirm("정말 이 과제를 삭제하시겠습니까?")) {
-            tasks = tasks.filter(t => t.id !== id);
-            delete completions[id];
-            saveData(); renderAdminTasks(); renderAdminInsights();
+            tasks = tasks.filter(t => t.id !== id); delete completions[id];
+            saveData(); renderAdminTasks();
         }
     }
-
-    function resetSingleTask(id) {
-        if(confirm("이 과제의 제출 기록을 모두 지우시겠습니까?")) {
-            completions[id] = [];
-            saveData(); renderAdminInsights();
-        }
-    }
-
     function resetAllCompletions() {
-        if(confirm("모든 과제의 제출 기록을 완전히 초기화하시겠습니까? (과제 목록은 유지됩니다)")) {
+        if(confirm("모든 제출 기록을 초기화하시겠습니까? (과제 목록은 유지)")) {
             tasks.forEach(t => completions[t.id] = []);
-            saveData(); renderAdminInsights();
+            saveData(); alert("초기화 완료!"); renderAdminOverview(); renderAdminByStudent();
         }
     }
 
-    // 2. 미제출자 인사이트 (선생님 최애 기능)
-    function renderAdminInsights() {
-        const panel = document.getElementById('adminInsights');
-        panel.innerHTML = tasks.map(task => {
-            const missing = students.filter(s => !completions[task.id].includes(s));
-            const isAllDone = missing.length === 0;
-            
-            let bodyHtml = isAllDone 
-                ? `<div class="all-done-msg">🎉 전원 제출 완료! 최고예요!</div>`
-                : missing.map(name => `<div class="missing-chip"><span>🚨</span> ${name}</div>`).join('');
-                
+    // 2. Student List Settings
+    function renderAdminStudents() {
+        const list = document.getElementById('adminStudentList');
+        list.innerHTML = students.map((name, idx) => `
+            <div style="background:var(--paper); border:1px solid var(--border); padding:6px 12px; border-radius:100px; font-weight:600; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
+                ${getEmoji(idx)} ${name} <span style="color:var(--accent); cursor:pointer;" onclick="removeStudent(${idx})">✕</span>
+            </div>
+        `).join('');
+    }
+    function addStudent() {
+        const input = document.getElementById('newStudentName'), name = input.value.trim();
+        if(name) { students.push(name); input.value = ''; saveData(); renderAdminStudents(); }
+    }
+    function removeStudent(idx) {
+        if(confirm("이 학생을 명단에서 삭제할까요?")) {
+            const name = students[idx]; students.splice(idx, 1);
+            for(let tid in completions) completions[tid] = completions[tid].filter(s => s !== name);
+            saveData(); renderAdminStudents();
+        }
+    }
+
+    // 3. Overview (한눈에 보기)
+    function renderAdminOverview() {
+        const container = document.getElementById('adminOverviewContent');
+        container.innerHTML = tasks.map(task => {
+            const done = completions[task.id];
+            const missing = students.filter(s => !done.includes(s));
             return `
-                <div class="insight-item">
-                    <div class="insight-header">
-                        <span>${task.icon} ${task.title}</span>
-                        <span style="color:var(--accent)">미제출 ${missing.length}명</span>
+                <div class="insight-box">
+                    <div class="insight-header">${task.icon} ${task.title}</div>
+                    <div class="status-section">
+                        <div class="status-title" style="color:var(--success)">✅ 제출완료 (${done.length}명)</div>
+                        <div class="chip-wrap">${done.length ? done.map(s => `<span class="chip done">${s}</span>`).join('') : '<span style="color:var(--border)">아직 제출자가 없습니다.</span>'}</div>
                     </div>
-                    <div class="insight-body">${bodyHtml}</div>
+                    <div class="status-section">
+                        <div class="status-title" style="color:var(--accent)">🚨 미제출 (${missing.length}명)</div>
+                        <div class="chip-wrap">${missing.length ? missing.map(s => `<span class="chip missing">${s}</span>`).join('') : '<span style="color:var(--success); font-weight:bold;">🎉 전원 제출 완료!</span>'}</div>
+                    </div>
                 </div>
             `;
         }).join('');
     }
 
-    // 3. 학생 명단 관리
-    function renderAdminStudents() {
-        const list = document.getElementById('adminStudentList');
-        list.innerHTML = students.map((name, idx) => `
-            <div style="background:var(--paper); border:1px solid var(--border); padding:6px 12px; border-radius:100px; font-weight:600; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
-                ${getEmoji(idx)} ${name}
-                <span style="color:var(--accent); cursor:pointer; font-weight:800;" onclick="removeStudent(${idx})">✕</span>
-            </div>
-        `).join('');
+    // 4. By Student (학생별 보기)
+    function renderAdminByStudent() {
+        const container = document.getElementById('adminByStudentContent');
+        container.innerHTML = students.map((student, idx) => {
+            const taskBadges = tasks.map(task => {
+                const isDone = completions[task.id].includes(student);
+                return `<span class="badge ${isDone ? 'o' : 'x'}">${task.icon} ${isDone ? '제출' : '미제출'}</span>`;
+            }).join('');
+            return `<tr>
+                <td style="font-weight:700; font-size:1.1rem; color:var(--ink);">${getEmoji(idx)} ${student}</td>
+                <td>${taskBadges}</td>
+            </tr>`;
+        }).join('');
     }
 
-    function addStudent() {
-        const input = document.getElementById('newStudentName');
-        const name = input.value.trim();
-        if(name) {
-            students.push(name);
-            input.value = '';
-            saveData(); renderAdminStudents(); renderAdminInsights();
-        }
-    }
-
-    function removeStudent(idx) {
-        if(confirm("이 학생을 명단에서 삭제할까요?")) {
-            const name = students[idx];
-            students.splice(idx, 1);
-            // 완료 기록에서도 삭제
-            for(let tid in completions) {
-                completions[tid] = completions[tid].filter(s => s !== name);
-            }
-            saveData(); renderAdminStudents(); renderAdminInsights();
-        }
-    }
-
-    // 실행
     window.onload = init;
 </script>
 </body>
