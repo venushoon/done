@@ -6,7 +6,7 @@
 <title>다했어요! 보드 (Ultimate Edition)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
 
 <style>
     /* ==========================================
@@ -28,6 +28,7 @@
         --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
         --shadow-lg: 0 15px 35px rgba(15, 23, 42, 0.08);
         --shadow-xl: 0 25px 50px rgba(15, 23, 42, 0.15);
+        --shadow-dock: 0 20px 50px rgba(0, 0, 0, 0.15);
         
         --radius-sm: 8px;
         --radius-md: 16px;
@@ -40,8 +41,11 @@
         margin: 0; padding: 0; height: 100%; overflow: hidden;
         font-family: 'Pretendard', 'DM Sans', sans-serif;
         background: var(--paper); color: var(--ink);
-        background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px;
+        background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px); background-size: 24px 24px;
     }
+
+    /* 드래그 중 텍스트 선택 방지 */
+    body.is-dragging { user-select: none; -webkit-user-select: none; }
 
     #app { display: flex; flex-direction: column; height: 100vh; position: relative; }
 
@@ -70,18 +74,19 @@
        USER VIEW (Student Board)
     ========================================== */
     #user-view { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
-
     .board-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; width: 100%; }
-    
+
+    /* JS adjustLayout()이 padding-bottom 제어 */
     .task-container {
-        flex-grow: 1; padding: 30px; overflow-x: auto; overflow-y: hidden;
-        display: flex; gap: 24px; align-items: stretch; justify-content: center; /* 🟢 칸반 가운데 정렬 */
+        flex-grow: 1; padding: 30px; padding-bottom: 30px;
+        overflow-x: auto; overflow-y: hidden;
+        display: flex; gap: 24px; align-items: flex-start; justify-content: center;
     }
-    
-    .task-container::-webkit-scrollbar { height: 10px; }
+    .task-container::-webkit-scrollbar { width: 10px; height: 10px; }
     .task-container::-webkit-scrollbar-track { background: transparent; }
     .task-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid var(--paper); }
 
+    /* JS adjustLayout()이 max-height 제어 */
     .task-col {
         flex: 1 1 300px; min-width: 300px; max-width: 700px;
         background: rgba(255, 255, 255, 0.85); border: 2px solid var(--surface);
@@ -89,23 +94,19 @@
         display: flex; flex-direction: column; position: relative; 
         transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
-    .task-container[data-count="1"] .task-col { margin: 0 auto; max-width: 800px; } /* 1개일 때 적절히 넓게 */
-    
+    .task-container[data-count="1"] .task-col { margin: 0 auto; }
     .task-col.drag-over { border-color: var(--navy); box-shadow: inset 0 0 0 2px var(--navy), var(--shadow-lg); background: var(--surface); }
     
-    .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
-    .task-icon {
-        width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
-        font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); transition: all 0.3s ease;
-    }
+    .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
+    .task-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
     .task-info { flex-grow: 1; }
-    .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; transition: all 0.3s ease; }
+    .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; }
     
-    .progress-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; transition: all 0.3s ease; }
+    .progress-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; }
     .progress-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
     .progress-bg { fill: none; stroke: var(--paper); stroke-width: 4; }
     .progress-fill { fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
-    .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); transition: all 0.3s ease; }
+    .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); }
 
     /* Dynamic Scaling for 1-2 Tasks */
     .task-container[data-count="1"] .task-icon { width: 76px; height: 76px; font-size: 3rem; border-radius: 20px; }
@@ -117,34 +118,40 @@
     .task-container[data-count="2"] .progress-wrap { width: 52px; height: 52px; }
     .task-container[data-count="2"] .progress-text { font-size: 0.9rem; }
 
+    /* task-body: 내부 스크롤 허용. max-height는 JS가 설정 */
     .task-body {
-        padding: 24px; flex-grow: 1; overflow-y: auto;
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; align-content: start;
+        padding: 24px; flex-grow: 1; overflow-y: auto; overflow-x: hidden;
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; align-content: start;
+        min-height: 100px;
     }
+    .task-body::-webkit-scrollbar { width: 6px; }
+    .task-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
     
     .done-chip {
         background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
-        padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px;
-        box-shadow: var(--shadow-sm); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        cursor: pointer; position: relative; overflow: hidden;
+        padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+        box-shadow: var(--shadow-sm); cursor: pointer; position: relative; overflow: hidden;
     }
-    .done-chip:hover::after {
+    /* popIn 애니메이션은 .chip-enter 클래스로만 트리거 (전체 재렌더 방지) */
+    .done-chip.chip-enter { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+    body:not(.is-dragging) .done-chip:hover::after {
         content: '✕ 취소'; position: absolute; inset: 0; background: rgba(225, 29, 72, 0.9); color: white;
-        display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; animation: fadeIn 0.2s;
+        display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; animation: fadeIn 0.2s;
     }
-    .done-emoji { font-size: 1.6rem; }
-    .done-name { font-size: 0.85rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
+    .done-emoji { font-size: 2.2rem; line-height: 1.2; pointer-events: none; }
+    .done-name { font-size: 0.95rem; font-weight: 700; color: var(--ink); white-space: nowrap; pointer-events: none; }
 
     /* ==========================================
        FLOATING STUDENT ROSTER (Mac OS Dock Style)
     ========================================== */
     #floating-roster {
         position: fixed; z-index: 900;
-        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         border: 1px solid var(--border); border-radius: var(--radius-lg);
         box-shadow: var(--shadow-xl); display: flex; overflow: hidden;
+        transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s;
     }
-    
     .roster-header {
         background: var(--surface); display: flex; align-items: center; justify-content: space-between;
         cursor: grab; user-select: none; touch-action: none;
@@ -152,43 +159,63 @@
     .roster-header:active { cursor: grabbing; background: var(--paper); }
     .roster-title-area { display: flex; align-items: center; gap: 8px; }
     .roster-title { font-weight: 800; color: var(--navy); margin: 0; font-size: 1rem; }
-    .roster-count { font-size: 0.75rem; color: var(--navy); font-weight: 700; background: var(--navy-light); padding: 4px 10px; border-radius: 100px; }
+    .roster-count { font-size: 0.75rem; color: var(--surface); font-weight: 700; background: var(--navy); padding: 4px 10px; border-radius: 100px; }
     .roster-controls { display: flex; gap: 8px; }
     .roster-btn { width: 28px; height: 28px; border: none; background: var(--paper); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-light); font-weight: bold; font-size: 1rem; transition: 0.2s; }
     .roster-btn:hover { background: var(--border); color: var(--ink); }
 
-    /* 🟢 Vertical (2 Column) - Left / Right */
-    #floating-roster[data-layout="vertical"] { flex-direction: column; width: 220px; max-height: 75vh; } /* 2열 들어갈 폭 */
-    #floating-roster[data-layout="vertical"] .roster-header { padding: 16px 15px; border-bottom: 1px solid var(--border); }
-    #floating-roster[data-layout="vertical"] .roster-title-area { flex-direction: column; align-items: flex-start; gap: 4px; }
-    #floating-roster[data-layout="vertical"] .dock-container { display: grid; grid-template-columns: repeat(2, 1fr); padding: 15px; gap: 10px; overflow-y: auto; overflow-x: hidden; }
+    /* Vertical (2 Column) - Left / Right */
+    #floating-roster[data-layout="vertical"] { flex-direction: column; width: auto; max-width: 230px; max-height: 80vh; }
+    #floating-roster[data-layout="vertical"] .roster-header { padding: 14px 15px; border-bottom: 1px solid var(--border); }
+    #floating-roster[data-layout="vertical"] .roster-title-area { flex-direction: row; align-items: center; gap: 8px; }
+    #floating-roster[data-layout="vertical"] .dock-container { 
+        display: grid; grid-template-columns: repeat(2, 1fr); padding: 12px; gap: 8px; overflow-y: auto; overflow-x: hidden; justify-items: center;
+    }
 
-    /* 🟢 Horizontal (2 Row) - Bottom */
-    #floating-roster[data-layout="horizontal"] { flex-direction: column; width: 95vw; max-width: 900px; height: auto; } /* 과제카드 2개 폭 900px */
-    #floating-roster[data-layout="horizontal"] .roster-header { padding: 10px 20px; border-bottom: 1px solid var(--border); flex-direction: row; }
+    /* Horizontal (2 Row) - Bottom */
+    #floating-roster[data-layout="horizontal"] { flex-direction: column; width: 95vw; max-width: 1200px; height: auto; }
+    #floating-roster[data-layout="horizontal"] .roster-header { padding: 8px 18px; border-bottom: 1px solid var(--border); flex-direction: row; }
     #floating-roster[data-layout="horizontal"] .roster-title-area { flex-direction: row; align-items: center; }
-    #floating-roster[data-layout="horizontal"] .dock-container { display: flex; flex-direction: row; flex-wrap: wrap; padding: 12px 15px; gap: 10px; overflow-x: hidden; overflow-y: auto; align-items: center; justify-content: center; max-height: 180px; }
+    #floating-roster[data-layout="horizontal"] .dock-container { 
+        display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); /* 무조건 10등분 (2행 고정) */
+        padding: 10px 12px; gap: 6px; overflow-x: hidden; overflow-y: auto; justify-items: center;
+    }
 
     .dock-container::-webkit-scrollbar { width: 6px; height: 6px; }
     .dock-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
+    /* 독바 칩 디자인 */
     .draggable-chip {
-        background: var(--surface); border: 1px solid var(--border); border-radius: 12px; 
-        padding: 10px 14px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; 
-        cursor: grab; user-select: none; touch-action: none; transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-        box-shadow: var(--shadow-sm); width: 90px; justify-content: center; flex-shrink: 0;
+        background: var(--surface); border: 1px solid var(--border); border-radius: 10px; 
+        padding: 6px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 700; font-size: 0.78rem; 
+        cursor: grab; user-select: none; touch-action: none; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        box-shadow: var(--shadow-sm); width: 100%; max-width: 72px; flex-shrink: 0;
     }
     
-    /* 🟢 드래그 중이 아닐때만 호버 작동 (깜빡임 제거) */
-    body:not(.is-dragging) .draggable-chip:hover { background: var(--navy-light); border-color: var(--navy); transform: scale(1.1); z-index:10; }
-    .draggable-chip:active { cursor: grabbing; opacity: 0.5; transform: scale(1); }
-
-    .ghost-chip {
-        position: fixed; pointer-events: none; z-index: 9999;
-        background: var(--surface); border: 2px solid var(--navy); border-radius: 12px;
-        padding: 12px 20px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem;
-        box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.05);
+    .dock-emoji-wrap {
+        width: clamp(28px, 4vw, 36px); height: clamp(28px, 4vw, 36px); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); pointer-events: none;
     }
+    .dock-emoji { font-size: clamp(1.2rem, 2vw, 1.5rem); pointer-events: none; line-height: 1.2; }
+    .dock-name { pointer-events: none; white-space: nowrap; color: var(--ink); font-size: clamp(0.65rem, 1vw, 0.78rem); overflow: hidden; text-overflow: ellipsis; max-width: 100%; padding: 0 2px;}
+
+    body:not(.is-dragging) .draggable-chip:hover { 
+        background: var(--surface); border-color: var(--navy); 
+        transform: scale(1.15) translateY(-4px); z-index: 10;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+    }
+    .draggable-chip:active { cursor: grabbing; transform: scale(1); opacity: 0.5; }
+
+    /* 드래그 잔상 (Ghost) - 깜빡임 원천 차단 */
+    .ghost-chip {
+        position: fixed; pointer-events: none !important; z-index: 9999;
+        background: var(--surface); border: 2px solid var(--navy); border-radius: 12px;
+        padding: 10px 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-weight: 700; font-size: 0.95rem;
+        box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.05); color: var(--navy);
+    }
+    .ghost-chip .dock-emoji-wrap { width: 44px; height: 44px; }
+    .ghost-chip .dock-emoji { font-size: 2rem; }
 
     /* ==========================================
        FLOATING TIMER
@@ -201,10 +228,8 @@
     }
     .drag-handle { cursor: grab; padding: 10px; color: var(--ink-light); font-size: 1.2rem; line-height: 0.5; user-select: none; touch-action: none;}
     .drag-handle:active { cursor: grabbing; color: var(--navy); }
-    
     .time-display { font-family: 'DM Sans', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--ink); letter-spacing: -1px; font-variant-numeric: tabular-nums; cursor: pointer; }
     .time-display.warning { color: var(--accent); animation: pulse 1s infinite; }
-    
     .timer-controls { display: flex; gap: 6px; align-items: center; }
     .timer-btn { width: 36px; height: 36px; border: none; border-radius: 50%; background: var(--paper); display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: var(--ink-light); transition: 0.2s; }
     .timer-btn:hover { background: var(--border); color: var(--ink); }
@@ -217,56 +242,30 @@
     ========================================== */
     #admin-view { flex-grow: 1; display: none; background: var(--paper); overflow: hidden; }
     .admin-container { display: flex; height: 100%; width: 100%; max-width: 1600px; margin: 0 auto; }
-    
-    .admin-sidebar {
-        width: 260px; background: var(--surface); border-right: 1px solid var(--border);
-        padding: 20px 0; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0;
-    }
-    .admin-tab-btn {
-        padding: 16px 24px; text-align: left; background: transparent; border: none; font-size: 1.05rem;
-        font-weight: 700; color: var(--ink-light); cursor: pointer; transition: 0.2s;
-        border-left: 4px solid transparent; display: flex; align-items: center; gap: 10px;
-    }
+    .admin-sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+    .admin-tab-btn { padding: 16px 24px; text-align: left; background: transparent; border: none; font-size: 1.05rem; font-weight: 700; color: var(--ink-light); cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; display: flex; align-items: center; gap: 10px; }
     .admin-tab-btn:hover { background: var(--paper); color: var(--ink); }
     .admin-tab-btn.active { background: var(--navy-light); color: var(--navy); border-left-color: var(--navy); }
-    
     .admin-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
     .tab-pane { display: none; animation: fadeIn 0.3s; max-width: 1000px; }
     .tab-pane.active { display: block; }
-    
     .panel-title { font-size: 1.4rem; font-weight: 800; color: var(--navy); margin: 0 0 24px 0; display: flex; justify-content: space-between; align-items: center; }
-
     .admin-card { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 24px; }
     .task-edit-item { display: flex; gap: 10px; align-items: center; background: var(--paper); padding: 12px; border-radius: var(--radius-md); margin-bottom: 8px; }
     .icon-input { width: 50px; text-align: center; font-size: 1.5rem; }
     .text-input { flex-grow: 1; border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); outline: none; font-size: 0.95rem; font-family: inherit; }
     .text-input:focus { border-color: var(--navy); }
-    .btn-primary { background: var(--navy); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .btn-primary { background: var(--navy); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.2s;}
     .btn-primary:hover { background: #172554; }
-    .btn-danger-sm { background: #ffe4e6; color: var(--accent); border: none; width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; }
-
-    /* Emoji Picker Styles */
+    .btn-danger-sm { background: #ffe4e6; color: var(--accent); border: none; width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; transition: 0.2s;}
+    .btn-danger-sm:hover { background: var(--accent); color: white; }
     .emoji-picker-container { position: relative; display: flex; align-items: stretch; }
-    .emoji-selector-btn {
-        width: 60px; border: 1px solid var(--border); border-radius: var(--radius-sm);
-        background: var(--surface); font-size: 1.5rem; cursor: pointer; display: flex;
-        align-items: center; justify-content: center; transition: border-color 0.2s;
-    }
+    .emoji-selector-btn { width: 60px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s; }
     .emoji-selector-btn:hover { border-color: var(--navy); }
-    .emoji-picker {
-        position: absolute; bottom: calc(100% + 10px); left: 0;
-        background: var(--surface); border: 1px solid var(--border);
-        border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
-        padding: 12px; display: none; grid-template-columns: repeat(5, 1fr);
-        gap: 6px; z-index: 100;
-    }
+    .emoji-picker { position: absolute; top: calc(100% + 10px); left: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 12px; display: none; grid-template-columns: repeat(5, 1fr); gap: 6px; z-index: 100; }
     .emoji-picker.show { display: grid; animation: fadeIn 0.2s; }
-    .emoji-option {
-        width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
-        font-size: 1.5rem; cursor: pointer; border-radius: 8px; transition: background 0.2s;
-    }
+    .emoji-option { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; border-radius: 8px; transition: background 0.2s; }
     .emoji-option:hover { background: var(--paper); }
-
     .insight-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 24px; }
     .insight-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
     .insight-header { background: var(--paper); padding: 16px 20px; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid var(--border); }
@@ -277,13 +276,11 @@
     .chip { padding: 6px 12px; border-radius: 100px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
     .chip.done { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
     .chip.missing { background: #fff1f2; color: var(--accent); border: 1px solid #fecdd3; }
-
     .student-record-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
     .student-record-table th, .student-record-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
     .student-record-table th { background: var(--paper); font-weight: 800; color: var(--ink-light); }
     .student-record-table tr:last-child td { border-bottom: none; }
-    
-    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; margin: 0 6px 6px 0; border: 1px solid transparent; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; margin: 0 6px 6px 0; border: 1px solid transparent; font-weight: 700;}
     .badge.done { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
     .badge.missing { background: var(--paper); color: var(--ink-light); border-color: var(--border); opacity: 0.75; }
 
@@ -292,6 +289,15 @@
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     
     .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 10; border-radius: var(--radius-lg); }
+
+    @media (max-width: 768px) {
+        header { flex-direction: column; gap: 15px; padding: 15px; height: auto; }
+        .admin-container { flex-direction: column; }
+        .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; overflow-x: auto; padding: 0; }
+        .admin-tab-btn { border-left: none; border-bottom: 4px solid transparent; white-space: nowrap; }
+        .admin-tab-btn.active { border-left-color: transparent; border-bottom-color: var(--navy); }
+        .task-col { flex: 0 0 260px; min-width: 260px; }
+    }
 </style>
 </head>
 <body>
@@ -328,7 +334,8 @@
     <div id="floating-roster" data-layout="horizontal" style="left: 50%; bottom: 20px; top: auto; right: auto; transform: translateX(-50%);">
         <div class="roster-header" id="roster-drag-handle">
             <div class="roster-title-area">
-                <span class="roster-title">👇 이름표</span>
+                <span class="drag-handle" style="padding:0;">⋮⋮</span>
+                <span class="roster-title">명단</span>
                 <span class="roster-count" id="totalStudentsCount">0명</span>
             </div>
             <div class="roster-controls">
@@ -351,15 +358,12 @@
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-overview', this)">👀 한눈에 보기</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-bystudent', this)">🧑‍🎓 학생별 보기</button>
             </aside>
-            
             <main class="admin-content">
                 <div id="tab-settings" class="tab-pane active">
                     <h2 class="panel-title">과제 및 명단 설정 <button class="btn-primary" onclick="resetAllCompletions()" style="background:var(--accent); font-size:0.9rem;">전체 제출기록 초기화</button></h2>
-                    
                     <div class="admin-card">
                         <h3 style="margin-top:0; color:var(--ink-light);">1. 과제 목록 관리 (최대 6개)</h3>
                         <div id="adminTaskList" style="margin-bottom: 15px;"></div>
-                        
                         <div style="display:flex; gap:10px; align-items: stretch; position: relative;">
                             <div class="emoji-picker-container">
                                 <button class="emoji-selector-btn" id="emojiSelectorBtn" onclick="toggleEmojiPicker()">📝</button>
@@ -369,7 +373,6 @@
                             <button class="btn-primary" onclick="addTask()">과제 추가</button>
                         </div>
                     </div>
-
                     <div class="admin-card">
                         <h3 style="margin-top:0; color:var(--ink-light);">2. 학생 명단 관리</h3>
                         <div style="display:flex; gap:10px; margin-bottom: 15px;">
@@ -379,21 +382,14 @@
                         <div style="display:flex; flex-wrap:wrap; gap:8px;" id="adminStudentList"></div>
                     </div>
                 </div>
-
                 <div id="tab-overview" class="tab-pane">
                     <h2 class="panel-title">한눈에 보기 (제출 현황) <button class="btn-primary" onclick="renderAdminOverview()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
                     <div class="insight-grid" id="adminOverviewContent"></div>
                 </div>
-
                 <div id="tab-bystudent" class="tab-pane">
                     <h2 class="panel-title">학생별 기록 확인 <button class="btn-primary" onclick="renderAdminByStudent()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
                     <table class="student-record-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 180px;">학생 이름</th>
-                                <th>과제 달성 현황</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th style="width: 180px;">학생 이름</th><th>과제 달성 현황</th></tr></thead>
                         <tbody id="adminByStudentContent"></tbody>
                     </table>
                 </div>
@@ -403,16 +399,15 @@
 </div>
 
 <script>
+    /* ── Audio ── */
     let audioCtx;
     function playSound(type) {
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
+            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
             const now = audioCtx.currentTime;
-
             if (type === 'drop') {
                 osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1500, now + 0.1);
                 gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
@@ -429,61 +424,146 @@
         } catch(e) {}
     }
 
-    const EMOJIS = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐢","🐸","🐵","🐧","🐥","🐬","🦔","🦉"];
-    const TASK_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
-    const TASK_EMOJIS = ["📝", "📖", "🥛", "🧹", "🎨", "🏃‍♂️", "🎵", "🗣️", "💡", "💯", "🍎", "⏰", "🗑️", "🧽", "🪴", "🧩", "⚽", "🍽️", "💻", "🔬", "🖍️", "🎒", "🚌", "🪥", "🦷"];
+    /* ── Constants ── */
+    const EMOJIS  = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐢","🐸","🐵","🐧","🐥","🐬","🦔","🦉"];
+    const PASTELS = ["#fef08a","#fbcfe8","#bfdbfe","#a7f3d0","#e9d5ff","#fef9c3","#fecaca","#bbf7d0","#bfdbfe","#e9d5ff","#fbcfe8","#fde047","#fef08a","#fbcfe8","#bfdbfe","#a7f3d0","#e9d5ff","#fef9c3","#fecaca","#bbf7d0"];
+    const TASK_COLORS = ["#3b82f6","#10b981","#f59e0b","#8b5cf6","#ec4899","#06b6d4"];
+    const TASK_EMOJIS = ["📝","📖","🥛","🧹","🎨","🏃‍♂️","🎵","🗣️","💡","💯","🍎","⏰","🗑️","🧽","🪴","🧩","⚽","🍽️","💻","🔬","🖍️","🎒","🚌","🪥","🦷"];
+    const sampleStudents = ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우","윤지호","박수아","이도현","김태희","정우진","최다은","강민지","조윤호"];
 
-    const defaultStudents = ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우","윤지호","박수아","이도현","김태희","정우진","최다은","강민지","조윤호"];
-    
-    let students = JSON.parse(localStorage.getItem('db_students_v3')) || defaultStudents;
-    let tasks = JSON.parse(localStorage.getItem('db_tasks_v3')) || [
+    /* ── State ── */
+    let students    = JSON.parse(localStorage.getItem('db_students_vf_live_fix2'))    || sampleStudents;
+    let tasks       = JSON.parse(localStorage.getItem('db_tasks_vf_live_fix2'))       || [
         { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
-        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] }
+        { id: 't2', title: '우유 다 마시기',   icon: '🥛', color: TASK_COLORS[1] },
+        { id: 't3', title: '1인 1역',          icon: '🧹', color: TASK_COLORS[2] }
     ];
-    let completions = JSON.parse(localStorage.getItem('db_completions_v3')) || {};
+    let completions = JSON.parse(localStorage.getItem('db_completions_vf_live_fix2')) || {};
 
     function saveData() {
-        localStorage.setItem('db_students_v3', JSON.stringify(students));
-        localStorage.setItem('db_tasks_v3', JSON.stringify(tasks));
-        localStorage.setItem('db_completions_v3', JSON.stringify(completions));
+        localStorage.setItem('db_students_vf_live_fix2',    JSON.stringify(students));
+        localStorage.setItem('db_tasks_vf_live_fix2',       JSON.stringify(tasks));
+        localStorage.setItem('db_completions_vf_live_fix2', JSON.stringify(completions));
     }
     function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
 
+    /* ── [FIX 2] Layout Adjuster: 독바가 과제를 가리지 않게 동적 패딩 적용 ── */
+    function adjustLayout() {
+        const roster   = document.getElementById('floating-roster');
+        const taskGrid = document.getElementById('taskGrid');
+        const header   = document.querySelector('header');
+        if (!roster || !taskGrid || !header) return;
+
+        const layout    = roster.getAttribute('data-layout');
+        const dockEl    = document.getElementById('studentDock');
+        const isCollapsed = dockEl && dockEl.style.display === 'none';
+        const headerH   = header.getBoundingClientRect().height;
+
+        if (layout === 'horizontal') {
+            const rosterRect = roster.getBoundingClientRect();
+            const rosterTop  = rosterRect.top;
+
+            // 하단 독 위로 스크롤 가능하게 여백 추가
+            const pb = Math.max(window.innerHeight - rosterTop + 10, 20);
+            taskGrid.style.paddingBottom = pb + 'px';
+
+            const availH = rosterTop - headerH - 50; 
+            document.querySelectorAll('.task-col').forEach(col => {
+                col.style.maxHeight = Math.max(availH, 200) + 'px';
+            });
+            document.querySelectorAll('.task-body').forEach(tb => {
+                const headerEl = tb.previousElementSibling; 
+                const taskHeaderH = headerEl ? headerEl.getBoundingClientRect().height : 90;
+                tb.style.maxHeight = Math.max(availH - taskHeaderH - 30, 100) + 'px';
+            });
+        } else {
+            taskGrid.style.paddingBottom = '30px';
+            document.querySelectorAll('.task-col').forEach(col => col.style.maxHeight = '');
+            document.querySelectorAll('.task-body').forEach(tb => tb.style.maxHeight = '');
+        }
+    }
+
+    /* ── [FIX 1] 증분 업데이트 (DOM 조작)로 깜빡임 완벽 제거 ── */
+    function updateProgress(taskId) {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+        const col = document.getElementById(`task-col-${taskId}`);
+        if (!col) return;
+        const cnt    = completions[taskId].length;
+        const total  = students.length;
+        const pct    = total ? cnt / total : 0;
+        const da     = 2 * Math.PI * 18;
+        col.querySelector('.progress-fill').style.strokeDashoffset = da * (1 - pct);
+        col.querySelector('.progress-text').textContent = cnt;
+    }
+
+    function createChipEl(taskId, name, sIdx) {
+        const chip = document.createElement('div');
+        chip.className = 'done-chip chip-enter'; // 애니메이션 적용
+        chip.dataset.student = name;
+        chip.innerHTML = `
+            <span class="done-emoji">${getEmoji(sIdx)}</span>
+            <span class="done-name">${name}</span>
+        `;
+        chip.addEventListener('click', () => removeCompletion(taskId, name));
+        chip.addEventListener('animationend', () => chip.classList.remove('chip-enter'), { once: true });
+        return chip;
+    }
+
+    function addChipToBoard(taskId, name) {
+        const body = document.getElementById(`task-body-${taskId}`);
+        if (!body) return;
+        const sIdx = students.indexOf(name);
+        body.appendChild(createChipEl(taskId, name, sIdx));
+        updateProgress(taskId);
+    }
+
+    function removeChipFromBoard(taskId, name) {
+        const body = document.getElementById(`task-body-${taskId}`);
+        if (!body) return;
+        // escape 처리하여 이름 선택
+        const chip = body.querySelector(`[data-student="${CSS.escape(name)}"]`);
+        if (chip) chip.remove();
+        updateProgress(taskId);
+    }
+
+    /* ── Init ── */
     function init() {
         tasks.forEach(t => { if (!completions[t.id]) completions[t.id] = []; });
         for (let tid in completions) { completions[tid] = completions[tid].filter(s => students.includes(s)); }
         
         renderUserView();
         initFloatingTimer();
-        initFloatingRoster(); 
-        initEmojiPicker(); 
-        
+        initFloatingRoster();
+        initEmojiPicker();
+
         const board = document.getElementById('taskGrid');
-        board.addEventListener('wheel', (e) => { 
-            if (e.deltaY !== 0) { e.preventDefault(); board.scrollLeft += e.deltaY; } 
+        board.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0) { e.preventDefault(); board.scrollLeft += e.deltaY; }
         });
-        
-        document.body.addEventListener('click', () => { try{ if(audioCtx) audioCtx.resume(); }catch(e){} }, {once: true});
+
+        window.addEventListener('resize', adjustLayout);
+        document.body.addEventListener('click', () => { try { if (audioCtx) audioCtx.resume(); } catch(e){} }, { once: true });
     }
 
+    /* ── Mode Switch ── */
     function switchMode(mode) {
         const floatingRoster = document.getElementById('floating-roster');
-        
-        if(mode === 'admin') {
+        if (mode === 'admin') {
             const pwd = prompt("관리자 암호를 입력하세요 (기본: 0000)");
             if (pwd !== '0000') { alert("암호가 틀렸습니다."); return; }
-            document.getElementById('user-view').style.display = 'none';
+            document.getElementById('user-view').style.display  = 'none';
             document.getElementById('admin-view').style.display = 'flex';
             document.getElementById('btn-user').classList.remove('active');
             document.getElementById('btn-admin').classList.add('active');
-            floatingRoster.style.display = 'none'; 
+            floatingRoster.style.display = 'none';
             renderAdminTasks(); renderAdminStudents(); renderAdminOverview(); renderAdminByStudent();
         } else {
-            document.getElementById('user-view').style.display = 'flex';
+            document.getElementById('user-view').style.display  = 'flex';
             document.getElementById('admin-view').style.display = 'none';
             document.getElementById('btn-user').classList.add('active');
             document.getElementById('btn-admin').classList.remove('active');
-            floatingRoster.style.display = 'flex'; 
+            floatingRoster.style.display = 'flex';
             renderUserView();
         }
     }
@@ -493,298 +573,328 @@
         document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         btnEl.classList.add('active');
-        
-        if(tabId === 'tab-overview') renderAdminOverview();
-        if(tabId === 'tab-bystudent') renderAdminByStudent();
+        if (tabId === 'tab-overview')   renderAdminOverview();
+        if (tabId === 'tab-bystudent')  renderAdminByStudent();
     }
 
+    /* ── Emoji Picker ── */
     function initEmojiPicker() {
         const picker = document.getElementById('emojiPicker');
         picker.innerHTML = TASK_EMOJIS.map(e => `<div class="emoji-option" onclick="selectEmoji('${e}')">${e}</div>`).join('');
-        
         document.addEventListener('click', (e) => {
-            const container = e.target.closest('.emoji-picker-container');
-            if(!container) {
-                const pickerEl = document.getElementById('emojiPicker');
-                if(pickerEl && pickerEl.classList.contains('show')) { pickerEl.classList.remove('show'); }
+            if (!e.target.closest('.emoji-picker-container')) {
+                document.getElementById('emojiPicker').classList.remove('show');
             }
         });
     }
     function toggleEmojiPicker() { document.getElementById('emojiPicker').classList.toggle('show'); }
     function selectEmoji(emoji) { document.getElementById('emojiSelectorBtn').textContent = emoji; document.getElementById('emojiPicker').classList.remove('show'); }
 
+    /* ── Render User View ── */
     function renderUserView() {
         const grid = document.getElementById('taskGrid');
-        grid.setAttribute('data-count', tasks.length); 
+        grid.setAttribute('data-count', tasks.length);
         grid.innerHTML = '';
 
         tasks.forEach(task => {
-            const completedCount = completions[task.id].length;
-            const totalCount = students.length;
-            const pct = totalCount ? (completedCount / totalCount) : 0;
-            const dashArray = 2 * Math.PI * 18;
+            const cnt    = completions[task.id].length;
+            const total  = students.length;
+            const pct    = total ? cnt / total : 0;
+            const da     = 2 * Math.PI * 18;
 
             const col = document.createElement('div');
             col.className = 'task-col';
             col.id = `task-col-${task.id}`;
             col.setAttribute('data-task-id', task.id);
-
             col.innerHTML = `
                 <div class="task-header">
                     <div class="task-icon" style="background:${task.color}15; color:${task.color}">${task.icon}</div>
-                    <div class="task-info">
-                        <h3 class="task-title">${task.title}</h3>
-                    </div>
+                    <div class="task-info"><h3 class="task-title">${task.title}</h3></div>
                     <div class="progress-wrap">
                         <svg class="progress-svg" viewBox="0 0 44 44">
                             <circle class="progress-bg" cx="22" cy="22" r="18"></circle>
-                            <circle class="progress-fill" cx="22" cy="22" r="18" stroke="${task.color}" stroke-dasharray="${dashArray}" stroke-dashoffset="${dashArray * (1 - pct)}"></circle>
+                            <circle class="progress-fill" cx="22" cy="22" r="18" stroke="${task.color}" stroke-dasharray="${da}" stroke-dashoffset="${da * (1 - pct)}"></circle>
                         </svg>
-                        <div class="progress-text">${completedCount}</div>
+                        <div class="progress-text">${cnt}</div>
                     </div>
                 </div>
-                <div class="task-body" id="task-body-${task.id}">
-                    ${completions[task.id].map(name => {
-                        const sIdx = students.indexOf(name);
-                        return `<div class="done-chip" onclick="removeCompletion('${task.id}', '${name}')">
-                            <span class="done-emoji">${getEmoji(sIdx)}</span>
-                            <span class="done-name">${name}</span>
-                        </div>`;
-                    }).join('')}
-                </div>
+                <div class="task-body" id="task-body-${task.id}"></div>
                 <canvas class="confetti-canvas" id="canvas-${task.id}"></canvas>
             `;
             grid.appendChild(col);
+
+            // 초기 로드 시: 기존 칩들을 애니메이션 없이 삽입
+            const body = col.querySelector(`#task-body-${task.id}`);
+            completions[task.id].forEach(name => {
+                const sIdx = students.indexOf(name);
+                const chip = document.createElement('div');
+                chip.className = 'done-chip'; // chip-enter 제거
+                chip.dataset.student = name;
+                chip.innerHTML = `
+                    <span class="done-emoji">${getEmoji(sIdx)}</span>
+                    <span class="done-name">${name}</span>
+                `;
+                chip.addEventListener('click', () => removeCompletion(task.id, name));
+                body.appendChild(chip);
+            });
         });
 
         renderDock();
+        requestAnimationFrame(adjustLayout); // 렌더링 후 레이아웃 조정
     }
 
+    /* ── Render Dock ── */
     function renderDock() {
         const dock = document.getElementById('studentDock');
         dock.innerHTML = '';
         document.getElementById('totalStudentsCount').textContent = `${students.length}명`;
 
         students.forEach((name, idx) => {
-            const chip = document.createElement('div');
+            const chip   = document.createElement('div');
             chip.className = 'draggable-chip';
-            chip.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
-            chip.addEventListener('pointerdown', (e) => startDrag(e, name, idx, chip));
+            const pastel = PASTELS[idx % PASTELS.length];
+            chip.innerHTML = `
+                <div class="dock-emoji-wrap" style="background-color:${pastel};">
+                    <span class="dock-emoji">${getEmoji(idx)}</span>
+                </div>
+                <span class="dock-name">${name}</span>
+            `;
+            chip.addEventListener('pointerdown', (e) => startDrag(e, name, idx, chip, pastel));
             dock.appendChild(chip);
         });
     }
 
+    /* ── Floating Roster (Drag & Snap with Boundary) ── */
     function initFloatingRoster() {
         const rosterEl = document.getElementById('floating-roster');
-        const handle = document.getElementById('roster-drag-handle');
+        const handle   = document.getElementById('roster-drag-handle');
         let isDragging = false, offsetX, offsetY;
+        let animationFrameId;
 
         handle.addEventListener('pointerdown', (e) => {
-            if(e.target.tagName.toLowerCase() === 'button') return; 
+            if (e.target.tagName.toLowerCase() === 'button') return;
             isDragging = true;
+            document.body.classList.add('is-dragging');
             
-            document.body.classList.add('is-dragging'); // 🟢 깜빡임 방지 (드래그 중 hover 효과 차단)
-            
-            rosterEl.style.transition = 'none';
             const rect = rosterEl.getBoundingClientRect();
-            rosterEl.style.left = rect.left + 'px';
-            rosterEl.style.top = rect.top + 'px';
-            rosterEl.style.right = 'auto';
+            rosterEl.style.transition = 'none';
+            rosterEl.style.left   = rect.left + 'px';
+            rosterEl.style.top    = rect.top  + 'px';
+            rosterEl.style.right  = 'auto';
             rosterEl.style.bottom = 'auto';
             rosterEl.style.transform = 'none';
             
-            offsetX = e.clientX - rect.left; 
+            offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
             
-            document.addEventListener('pointermove', onMove, {passive: false});
-            document.addEventListener('pointerup', onUp);
+            document.addEventListener('pointermove', onMove, { passive: false });
+            document.addEventListener('pointerup',   onUp);
         });
 
         function onMove(e) {
-            if(!isDragging) return;
+            if (!isDragging) return;
             e.preventDefault();
-            rosterEl.style.left = (e.clientX - offsetX) + 'px';
-            rosterEl.style.top = (e.clientY - offsetY) + 'px';
+            
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            animationFrameId = requestAnimationFrame(() => {
+                const ww = window.innerWidth, wh = window.innerHeight;
+                const rect = rosterEl.getBoundingClientRect();
+                
+                // 🟢 화면 밖으로 나가지 못하도록 Boundary(경계) 적용
+                let newLeft = e.clientX - offsetX;
+                let newTop  = e.clientY - offsetY;
+                
+                newLeft = Math.max(0, Math.min(newLeft, ww - rect.width));
+                newTop  = Math.max(0, Math.min(newTop,  wh - rect.height));
+
+                rosterEl.style.left = newLeft + 'px';
+                rosterEl.style.top  = newTop  + 'px';
+            });
         }
-        
-        function onUp(e) { 
-            isDragging = false; 
-            document.body.classList.remove('is-dragging'); // 🟢 드래그 끝나면 hover 복구
-            document.removeEventListener('pointermove', onMove); 
-            document.removeEventListener('pointerup', onUp); 
+
+        function onUp(e) {
+            isDragging = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
             
-            rosterEl.style.transition = 'left 0.3s ease, top 0.3s ease';
-            const ww = window.innerWidth; 
-            const wh = window.innerHeight;
-            const rect = rosterEl.getBoundingClientRect();
-            const cx = rect.left + (rect.width / 2);
-            const cy = rect.top + (rect.height / 2);
-            
-            // 🟢 자동 래핑 로직 (가장 가까운 곳으로 2행/2열 변환)
+            document.body.classList.remove('is-dragging');
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup',   onUp);
+
+            rosterEl.style.transition = 'left 0.4s cubic-bezier(0.16,1,0.3,1), top 0.4s cubic-bezier(0.16,1,0.3,1), right 0.4s, bottom 0.4s, transform 0.4s';
+
+            const ww = window.innerWidth, wh = window.innerHeight;
+            const cx = e.clientX, cy = e.clientY;
+
+            // 위치 기반 스냅 (Snap)
             if (cy > wh * 0.7) {
                 rosterEl.setAttribute('data-layout', 'horizontal');
-                rosterEl.style.left = '50%';
-                rosterEl.style.top = 'auto';
-                rosterEl.style.bottom = '20px';
+                rosterEl.style.left   = '50%'; rosterEl.style.top = 'auto';
+                rosterEl.style.bottom = '20px'; rosterEl.style.right = 'auto';
                 rosterEl.style.transform = 'translateX(-50%)';
             } else if (cx < ww * 0.35) {
                 rosterEl.setAttribute('data-layout', 'vertical');
-                rosterEl.style.left = '20px';
-                rosterEl.style.top = '50%';
+                rosterEl.style.left   = '20px'; rosterEl.style.top = '50%';
+                rosterEl.style.bottom = 'auto'; rosterEl.style.right = 'auto';
                 rosterEl.style.transform = 'translateY(-50%)';
             } else if (cx > ww * 0.65) {
                 rosterEl.setAttribute('data-layout', 'vertical');
-                rosterEl.style.left = 'auto';
-                rosterEl.style.right = '20px';
-                rosterEl.style.top = '50%';
+                rosterEl.style.left   = 'auto'; rosterEl.style.right = '20px';
+                rosterEl.style.top    = '50%';  rosterEl.style.bottom = 'auto';
                 rosterEl.style.transform = 'translateY(-50%)';
             } else {
                 rosterEl.setAttribute('data-layout', 'horizontal');
-                rosterEl.style.left = '50%';
-                rosterEl.style.top = 'auto';
-                rosterEl.style.bottom = '20px';
-                rosterEl.style.transform = 'translateX(-50%)';
+                rosterEl.style.left   = '50%'; rosterEl.style.top = 'auto';
+                rosterEl.style.bottom = '20px'; rosterEl.style.transform = 'translateX(-50%)';
             }
-            
-            setTimeout(() => { rosterEl.style.transition = 'none'; }, 300);
+
+            setTimeout(() => {
+                rosterEl.style.transition = 'none';
+                adjustLayout();
+            }, 420);
         }
     }
 
     function toggleRoster() {
         const dock = document.getElementById('studentDock');
-        const btn = document.getElementById('toggleRosterBtn');
-        if(dock.style.display === 'none') { dock.style.display = ''; btn.textContent = '−'; } 
-        else { dock.style.display = 'none'; btn.textContent = '＋'; }
+        const btn  = document.getElementById('toggleRosterBtn');
+        if (dock.style.display === 'none') {
+            dock.style.display = ''; btn.textContent = '−';
+        } else {
+            dock.style.display = 'none'; btn.textContent = '＋';
+        }
+        requestAnimationFrame(adjustLayout); 
     }
 
+    /* ── Drag & Drop (Student → Task) ── */
     let ghost = null, dragStudentName = null, currentHoverCol = null;
 
-    function startDrag(e, name, idx, sourceEl) {
-        e.preventDefault(); dragStudentName = name;
-        document.body.classList.add('is-dragging'); // 🟢 칩 드래그 중 다른 아이콘 hover 방지
-        
+    function startDrag(e, name, idx, sourceEl, pastelColor) {
+        e.preventDefault();
+        dragStudentName = name;
+        document.body.classList.add('is-dragging');
+
         ghost = document.createElement('div');
         ghost.className = 'ghost-chip';
-        ghost.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
+        ghost.innerHTML = `
+            <div class="dock-emoji-wrap" style="background-color:${pastelColor}; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                <span class="dock-emoji" style="font-size:2rem; line-height:1;">${getEmoji(idx)}</span>
+            </div>
+            <span style="font-weight:700; font-size:0.9rem;">${name}</span>
+        `;
         document.body.appendChild(ghost);
-        
         moveGhost(e);
-        document.addEventListener('pointermove', onDragMove, {passive: false});
-        document.addEventListener('pointerup', onDragEnd);
+
+        document.addEventListener('pointermove', onDragMove, { passive: false });
+        document.addEventListener('pointerup',   onDragEnd);
     }
 
     function moveGhost(e) {
-        if(!ghost) return;
-        const x = e.clientX || (e.touches && e.touches[0].clientX);
-        const y = e.clientY || (e.touches && e.touches[0].clientY);
-        ghost.style.left = x + 'px'; ghost.style.top = y + 'px';
+        if (!ghost) return;
+        ghost.style.left = (e.clientX || (e.touches && e.touches[0].clientX)) + 'px';
+        ghost.style.top  = (e.clientY || (e.touches && e.touches[0].clientY)) + 'px';
     }
 
     function onDragMove(e) {
-        e.preventDefault(); moveGhost(e);
+        e.preventDefault();
+        moveGhost(e);
         const x = e.clientX || (e.touches && e.touches[0].clientX);
         const y = e.clientY || (e.touches && e.touches[0].clientY);
         
-        ghost.style.display = 'none'; 
-        const elemBelow = document.elementFromPoint(x, y);
-        ghost.style.display = 'flex';
-        
-        const colBelow = elemBelow ? elemBelow.closest('.task-col') : null;
-        
+        // CSS pointer-events:none 덕분에 별도 hide 없이 통과
+        const colBelow = document.elementFromPoint(x, y)?.closest('.task-col') || null;
         if (currentHoverCol !== colBelow) {
             if (currentHoverCol) currentHoverCol.classList.remove('drag-over');
-            if (colBelow) colBelow.classList.add('drag-over');
+            if (colBelow)        colBelow.classList.add('drag-over');
             currentHoverCol = colBelow;
         }
     }
 
     function onDragEnd(e) {
-        document.body.classList.remove('is-dragging'); // 🟢 hover 복구
-        document.removeEventListener('pointermove', onDragMove); document.removeEventListener('pointerup', onDragEnd);
+        document.body.classList.remove('is-dragging');
+        document.removeEventListener('pointermove', onDragMove);
+        document.removeEventListener('pointerup',   onDragEnd);
         if (ghost) { ghost.remove(); ghost = null; }
         if (currentHoverCol) {
             currentHoverCol.classList.remove('drag-over');
-            const taskId = currentHoverCol.getAttribute('data-task-id');
-            handleDrop(taskId, dragStudentName);
+            handleDrop(currentHoverCol.getAttribute('data-task-id'), dragStudentName);
             currentHoverCol = null;
         }
         dragStudentName = null;
     }
 
+    /* ── [FIX 1] DOM Incremental Updates ── */
     function handleDrop(taskId, studentName) {
         if (!completions[taskId]) completions[taskId] = [];
         if (completions[taskId].includes(studentName)) { playSound('error'); return; }
-        
         completions[taskId].push(studentName);
-        saveData(); playSound('drop'); fireConfetti(taskId); renderUserView();
+        saveData();
+        playSound('drop');
+        addChipToBoard(taskId, studentName); 
+        fireConfetti(taskId);
     }
 
     function removeCompletion(taskId, studentName) {
-        if(confirm(`${studentName} 학생의 기록을 취소할까요?`)) {
-            completions[taskId] = completions[taskId].filter(n => n !== studentName);
-            saveData(); playSound('delete'); renderUserView();
-        }
+        if (!confirm(`${studentName} 학생의 기록을 취소할까요?`)) return;
+        completions[taskId] = completions[taskId].filter(n => n !== studentName);
+        saveData();
+        playSound('delete');
+        removeChipFromBoard(taskId, studentName);
     }
 
+    /* ── Confetti ── */
     function fireConfetti(taskId) {
         const canvas = document.getElementById(`canvas-${taskId}`);
-        if(!canvas) return;
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
-        
+        canvas.width  = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
         const particles = [];
-        const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'];
-        
-        for(let i=0; i<30; i++) {
+        const colors = ['#f59e0b','#10b981','#3b82f6','#ec4899','#8b5cf6'];
+        for (let i = 0; i < 30; i++) {
             particles.push({
-                x: canvas.width / 2, y: canvas.height - 20, r: Math.random() * 5 + 3,
+                x: canvas.width / 2, y: canvas.height - 20,
+                r: Math.random() * 5 + 3,
                 dx: Math.random() * 10 - 5, dy: Math.random() * -12 - 5,
                 color: colors[Math.floor(Math.random() * colors.length)]
             });
         }
-        
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             let active = false;
             particles.forEach(p => {
-                p.x += p.dx; p.y += p.dy; p.dy += 0.5; 
-                if(p.y < canvas.height) active = true;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                p.x += p.dx; p.y += p.dy; p.dy += 0.5;
+                if (p.y < canvas.height) active = true;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
                 ctx.fillStyle = p.color; ctx.fill();
             });
-            if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height);
+            if (active) requestAnimationFrame(animate);
+            else ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
         animate();
     }
 
+    /* ── Timer ── */
     let totalSeconds = 20 * 60, timeRemaining = totalSeconds, timerInterval = null, isPlaying = false;
-    
+
     function initFloatingTimer() {
         const timerEl = document.getElementById('floating-timer');
-        const handle = document.getElementById('timer-drag-handle');
+        const handle  = document.getElementById('timer-drag-handle');
         let isDragging = false, offsetX, offsetY;
 
         handle.addEventListener('pointerdown', (e) => {
             isDragging = true;
-            timerEl.classList.add('dragging');
             const rect = timerEl.getBoundingClientRect();
-            
             timerEl.style.transform = 'none';
             timerEl.style.left = rect.left + 'px';
-            timerEl.style.top = rect.top + 'px';
-            
-            offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
-            document.addEventListener('pointermove', onMove, {passive: false});
-            document.addEventListener('pointerup', onUp);
+            timerEl.style.top  = rect.top  + 'px';
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            document.addEventListener('pointermove', onMove, { passive: false });
+            document.addEventListener('pointerup',   onUp);
         });
-
-        function onMove(e) {
-            if(!isDragging) return;
-            e.preventDefault();
-            timerEl.style.left = (e.clientX - offsetX) + 'px';
-            timerEl.style.top = (e.clientY - offsetY) + 'px';
-        }
-        function onUp() { isDragging = false; timerEl.classList.remove('dragging'); document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); }
+        function onMove(e) { if (!isDragging) return; e.preventDefault(); timerEl.style.left = (e.clientX - offsetX) + 'px'; timerEl.style.top = (e.clientY - offsetY) + 'px'; }
+        function onUp()    { isDragging = false; document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); }
         updateTimerDisplay();
     }
 
@@ -796,38 +906,39 @@
         display.classList.toggle('warning', timeRemaining <= 60 && timeRemaining > 0);
     }
     function setTimeManually() {
-        if(isPlaying) toggleTimer();
+        if (isPlaying) toggleTimer();
         const input = prompt("설정할 시간을 분 단위로 입력하세요 (예: 15)", Math.floor(timeRemaining / 60));
         if (input && !isNaN(input) && parseInt(input) > 0) { timeRemaining = parseInt(input) * 60; updateTimerDisplay(); }
     }
     function adjustTime(min) { timeRemaining = Math.max(0, timeRemaining + min * 60); updateTimerDisplay(); }
     function toggleTimer() {
-        const iconPlay = document.getElementById('icon-play'), iconPause = document.getElementById('icon-pause');
+        const ip = document.getElementById('icon-play'), ipa = document.getElementById('icon-pause');
         if (isPlaying) {
-            clearInterval(timerInterval); iconPlay.style.display = 'block'; iconPause.style.display = 'none';
+            clearInterval(timerInterval); ip.style.display = 'block'; ipa.style.display = 'none';
         } else {
             if (timeRemaining <= 0) return;
             timerInterval = setInterval(() => {
                 timeRemaining--; updateTimerDisplay();
                 if (timeRemaining <= 0) {
                     clearInterval(timerInterval); isPlaying = false;
-                    iconPlay.style.display = 'block'; iconPause.style.display = 'none';
+                    ip.style.display = 'block'; ipa.style.display = 'none';
                     playSound('alert'); setTimeout(() => alert("⏰ 시간이 종료되었습니다!"), 100);
                 }
             }, 1000);
-            iconPlay.style.display = 'none'; iconPause.style.display = 'block';
+            ip.style.display = 'none'; ipa.style.display = 'block';
         }
         isPlaying = !isPlaying;
     }
     function resetTimer() {
         clearInterval(timerInterval); isPlaying = false;
-        document.getElementById('icon-play').style.display = 'block'; document.getElementById('icon-pause').style.display = 'none';
+        document.getElementById('icon-play').style.display  = 'block';
+        document.getElementById('icon-pause').style.display = 'none';
         timeRemaining = 20 * 60; updateTimerDisplay();
     }
 
+    /* ── Admin: Tasks ── */
     function renderAdminTasks() {
-        const list = document.getElementById('adminTaskList');
-        list.innerHTML = tasks.map(t => `
+        document.getElementById('adminTaskList').innerHTML = tasks.map(t => `
             <div class="task-edit-item">
                 <span class="icon-input">${t.icon}</span>
                 <span style="flex-grow:1; font-weight:700; font-size:1.05rem;">${t.title}</span>
@@ -836,52 +947,63 @@
         `).join('');
     }
     function addTask() {
+        if (tasks.length >= 6) { alert("과제는 최대 6개까지 추가할 수 있습니다."); return; }
         const title = document.getElementById('newTaskTitle').value.trim();
-        const icon = document.getElementById('emojiSelectorBtn').textContent.trim() || '📝';
-        if(title) {
+        const icon  = document.getElementById('emojiSelectorBtn').textContent.trim() || '📝';
+        if (title) {
             const newId = 't' + Date.now();
             tasks.push({ id: newId, title, icon, color: TASK_COLORS[tasks.length % TASK_COLORS.length] });
-            completions[newId] = []; document.getElementById('newTaskTitle').value = '';
+            completions[newId] = [];
+            document.getElementById('newTaskTitle').value = '';
             saveData(); renderAdminTasks();
+            if (document.getElementById('user-view').style.display !== 'none') renderUserView();
         }
     }
     function removeTask(id) {
-        if(confirm("정말 이 과제를 삭제하시겠습니까?")) {
-            tasks = tasks.filter(t => t.id !== id); delete completions[id];
-            saveData(); renderAdminTasks();
-        }
+        if (!confirm("정말 이 과제를 삭제하시겠습니까?")) return;
+        tasks = tasks.filter(t => t.id !== id);
+        delete completions[id];
+        saveData(); renderAdminTasks();
+        if (document.getElementById('user-view').style.display !== 'none') renderUserView();
     }
     function resetAllCompletions() {
-        if(confirm("모든 학생의 제출 기록을 초기화하시겠습니까? (과제 목록은 유지됩니다)")) {
-            tasks.forEach(t => completions[t.id] = []);
-            saveData(); alert("기록 초기화 완료!"); renderAdminOverview(); renderAdminByStudent();
-        }
+        if (!confirm("모든 학생의 제출 기록을 초기화하시겠습니까? (과제 목록은 유지됩니다)")) return;
+        tasks.forEach(t => completions[t.id] = []);
+        saveData(); alert("기록 초기화 완료!");
+        renderAdminOverview(); renderAdminByStudent();
+        if (document.getElementById('user-view').style.display !== 'none') renderUserView();
     }
 
+    /* ── Admin: Students ── */
     function renderAdminStudents() {
-        const list = document.getElementById('adminStudentList');
-        list.innerHTML = students.map((name, idx) => `
+        document.getElementById('adminStudentList').innerHTML = students.map((name, idx) => `
             <div style="background:var(--paper); border:1px solid var(--border); padding:8px 14px; border-radius:100px; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:8px;">
-                ${getEmoji(idx)} ${name} <span style="color:var(--accent); cursor:pointer; margin-left:4px;" onclick="removeStudent(${idx})">✕</span>
+                ${getEmoji(idx)} ${name}
+                <span style="color:var(--accent); cursor:pointer; margin-left:4px;" onclick="removeStudent(${idx})">✕</span>
             </div>
         `).join('');
     }
     function addStudent() {
         const input = document.getElementById('newStudentName'), name = input.value.trim();
-        if(name) { students.push(name); input.value = ''; saveData(); renderAdminStudents(); }
-    }
-    function removeStudent(idx) {
-        if(confirm("이 학생을 명단에서 삭제할까요?")) {
-            const name = students[idx]; students.splice(idx, 1);
-            for(let tid in completions) completions[tid] = completions[tid].filter(s => s !== name);
+        if (name) {
+            students.push(name); input.value = '';
             saveData(); renderAdminStudents();
+            if (document.getElementById('user-view').style.display !== 'none') renderDock();
         }
     }
+    function removeStudent(idx) {
+        if (!confirm("이 학생을 명단에서 삭제할까요?")) return;
+        const name = students[idx];
+        students.splice(idx, 1);
+        for (let tid in completions) completions[tid] = completions[tid].filter(s => s !== name);
+        saveData(); renderAdminStudents();
+        if (document.getElementById('user-view').style.display !== 'none') renderUserView();
+    }
 
+    /* ── Admin: Overview & ByStudent ── */
     function renderAdminOverview() {
-        const container = document.getElementById('adminOverviewContent');
-        container.innerHTML = tasks.map(task => {
-            const done = completions[task.id];
+        document.getElementById('adminOverviewContent').innerHTML = tasks.map(task => {
+            const done    = completions[task.id];
             const missing = students.filter(s => !done.includes(s));
             return `
                 <div class="insight-box">
@@ -900,18 +1022,14 @@
     }
 
     function renderAdminByStudent() {
-        const container = document.getElementById('adminByStudentContent');
-        container.innerHTML = students.map((student, idx) => {
-            const taskBadges = tasks.map(task => {
+        document.getElementById('adminByStudentContent').innerHTML = students.map((student, idx) => {
+            const badges = tasks.map(task => {
                 const isDone = completions[task.id].includes(student);
-                return `<span class="badge ${isDone ? 'done' : 'missing'}">
-                            ${task.icon} <span>${task.title}</span> 
-                            <strong style="margin-left:4px;">${isDone ? 'O' : 'X'}</strong>
-                        </span>`;
+                return `<span class="badge ${isDone ? 'done' : 'missing'}">${task.icon} <span>${task.title}</span> <strong style="margin-left:4px;">${isDone ? 'O' : 'X'}</strong></span>`;
             }).join('');
             return `<tr>
                 <td style="font-weight:800; font-size:1.1rem; color:var(--ink);">${getEmoji(idx)} ${student}</td>
-                <td>${taskBadges}</td>
+                <td>${badges}</td>
             </tr>`;
         }).join('');
     }
