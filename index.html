@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>다했어요! 보드 (Ultimate Edition)</title>
+<title>다했어요! 보드 (Ultimate Mac OS Edition)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
@@ -53,13 +53,14 @@
         display: flex; justify-content: space-between; align-items: center;
         padding: 16px 30px; background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
-        z-index: 50; flex-shrink: 0; height: 76px;
+        z-index: 50; flex-shrink: 0; height: 80px; position: relative;
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 12px; width: 300px; }
     .brand-icon { font-size: 2rem; }
     .brand-text h1 { margin: 0; font-size: 1.4rem; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
     .brand-text p { margin: 0; font-size: 0.85rem; color: var(--ink-light); font-weight: 600; }
     
+    .header-right { width: 300px; display: flex; justify-content: flex-end; }
     .mode-toggle { display: flex; background: var(--paper); border-radius: 100px; padding: 4px; border: 1px solid var(--border); }
     .mode-btn {
         padding: 8px 20px; border: none; background: transparent; border-radius: 100px;
@@ -92,9 +93,9 @@
     .play-pause-btn svg { width: 18px; height: 18px; fill: currentColor; }
 
     /* ==========================================
-       USER VIEW (Student Board)
+       USER VIEW (Main Board)
     ========================================== */
-    #user-view { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
+    #user-view { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
     .board-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; width: 100%; }
     
@@ -165,11 +166,11 @@
 
     /* ==========================================
        FLOATING STUDENT ROSTER (Mac OS Dock Style)
-       스크롤 없이 2행/2열로 자동 래핑 적용
+       ★수정핵심★ 스크롤 없이 2행/2열로 자동 래핑 적용
     ========================================== */
     #floating-roster {
         position: fixed; z-index: 900;
-        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         border: 1px solid var(--border); border-radius: var(--radius-lg);
         box-shadow: var(--shadow-xl); display: flex; overflow: hidden;
     }
@@ -181,36 +182,38 @@
     .roster-header:active { cursor: grabbing; background: var(--paper); }
     .roster-title-area { display: flex; align-items: center; gap: 8px; }
     .roster-title { font-weight: 800; color: var(--navy); margin: 0; font-size: 1rem; }
-    .roster-count { font-size: 0.75rem; color: var(--navy); font-weight: 700; background: var(--navy-light); padding: 4px 10px; border-radius: 100px; }
+    .roster-count { font-size: 0.75rem; color: var(--surface); font-weight: 700; background: var(--navy); padding: 4px 10px; border-radius: 100px; }
     .roster-controls { display: flex; gap: 8px; }
     .roster-btn { width: 28px; height: 28px; border: none; background: var(--paper); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-light); font-weight: bold; font-size: 1rem; transition: 0.2s; }
     .roster-btn:hover { background: var(--border); color: var(--ink); }
 
-    /* Vertical (max 2 Columns) - Left / Right Snapped */
-    #floating-roster[data-layout="vertical"] { flex-direction: column; width: auto; max-width: 320px; max-height: 80vh; }
+    /* ★ 완벽한 Left / Right (세로 2열 고정 그리드) ★ */
+    #floating-roster[data-layout="vertical"] { flex-direction: column; width: auto; max-width: 300px; max-height: 85vh; }
     #floating-roster[data-layout="vertical"] .roster-header { padding: 16px 15px; border-bottom: 1px solid var(--border); }
     #floating-roster[data-layout="vertical"] .roster-title-area { flex-direction: row; align-items: center; gap: 8px; }
     #floating-roster[data-layout="vertical"] .dock-container { 
-        display: flex; flex-direction: column; flex-wrap: wrap; align-content: flex-start;
-        padding: 15px; gap: 10px; overflow-x: auto; overflow-y: hidden; 
+        display: grid; grid-template-columns: repeat(2, 1fr); /* 2열 고정 */
+        gap: 10px; padding: 15px; overflow-y: auto; overflow-x: hidden; justify-items: center;
     }
 
-    /* Horizontal (max 2 Rows) - Bottom Snapped */
-    #floating-roster[data-layout="horizontal"] { flex-direction: column; width: auto; max-width: 95vw; height: auto; }
+    /* ★ 완벽한 Bottom (가로 확장 폭 증가, 자동 줄바꿈 2행) ★ */
+    #floating-roster[data-layout="horizontal"] { flex-direction: column; width: 100%; max-width: 800px; height: auto; }
     #floating-roster[data-layout="horizontal"] .roster-header { padding: 10px 20px; border-bottom: 1px solid var(--border); flex-direction: row; }
     #floating-roster[data-layout="horizontal"] .roster-title-area { flex-direction: row; align-items: center; }
     #floating-roster[data-layout="horizontal"] .dock-container { 
-        display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center;
-        padding: 12px 15px; gap: 10px; overflow-x: hidden; overflow-y: auto; max-height: 220px; 
+        display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; align-content: flex-start;
+        padding: 12px 15px; gap: 10px; overflow-x: hidden; overflow-y: auto; max-height: 250px; 
     }
 
     .dock-container::-webkit-scrollbar { width: 6px; height: 6px; }
     .dock-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
+    /* 칩 크기 통일 */
     .draggable-chip {
         background: var(--surface); border: 1px solid var(--border); border-radius: 12px; 
-        padding: 10px 14px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; 
-        cursor: grab; user-select: none; touch-action: none; transition: transform 0.2s, box-shadow 0.2s;
+        padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; 
+        font-weight: 700; font-size: 0.85rem; width: 85px; /* 폭 고정으로 잘림 방지 */
+        cursor: grab; user-select: none; touch-action: none; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         box-shadow: var(--shadow-sm); flex-shrink: 0;
     }
     .draggable-chip:hover { 
@@ -220,13 +223,18 @@
         box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
     }
     .draggable-chip:active { cursor: grabbing; transform: scale(1); opacity: 0.5; }
+    
+    .dock-emoji { font-size: 1.8rem; pointer-events: none; }
+    .dock-name { pointer-events: none; white-space: nowrap; color: var(--ink); }
 
     .ghost-chip {
         position: fixed; pointer-events: none; z-index: 9999;
         background: var(--surface); border: 2px solid var(--navy); border-radius: 12px;
-        padding: 12px 20px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem;
-        box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.05);
+        padding: 12px 20px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        font-weight: 700; font-size: 0.85rem; color: var(--navy);
+        box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.1);
     }
+    .ghost-chip .dock-emoji { font-size: 1.8rem; }
 
     /* ==========================================
        ADMIN VIEW
@@ -302,7 +310,7 @@
     
     .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; margin: 0 6px 6px 0; border: 1px solid transparent; }
     .badge.done { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
-    .badge.missing { background: var(--paper); color: var(--ink-light); border-color: var(--border); opacity: 0.75; }
+    .badge.missing { background: #f1f5f9; color: var(--ink-light); border-color: var(--border); opacity: 0.7; }
 
     @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
@@ -354,7 +362,8 @@
     <div id="floating-roster" data-layout="horizontal" style="left: 50%; bottom: 20px; top: auto; right: auto; transform: translateX(-50%);">
         <div class="roster-header" id="roster-drag-handle">
             <div class="roster-title-area">
-                <span class="roster-title">👇 이름표</span>
+                <span class="drag-handle">⋮⋮</span>
+                <span class="roster-title">내 이름표 던지기</span>
                 <span class="roster-count" id="totalStudentsCount">0명</span>
             </div>
             <div class="roster-controls">
@@ -467,17 +476,17 @@
 
     const sampleStudents = ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우","윤지호","박수아","이도현","김태희","정우진","최다은","강민지","조윤호"];
     
-    let students = JSON.parse(localStorage.getItem('db_students_v4')) || sampleStudents;
-    let tasks = JSON.parse(localStorage.getItem('db_tasks_v4')) || [
+    let students = JSON.parse(localStorage.getItem('db_students_vfinal_v2')) || sampleStudents;
+    let tasks = JSON.parse(localStorage.getItem('db_tasks_vfinal_v2')) || [
         { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
         { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] }
     ];
-    let completions = JSON.parse(localStorage.getItem('db_completions_v4')) || {};
+    let completions = JSON.parse(localStorage.getItem('db_completions_vfinal_v2')) || {};
 
     function saveData() {
-        localStorage.setItem('db_students_v4', JSON.stringify(students));
-        localStorage.setItem('db_tasks_v4', JSON.stringify(tasks));
-        localStorage.setItem('db_completions_v4', JSON.stringify(completions));
+        localStorage.setItem('db_students_vfinal_v2', JSON.stringify(students));
+        localStorage.setItem('db_tasks_vfinal_v2', JSON.stringify(tasks));
+        localStorage.setItem('db_completions_vfinal_v2', JSON.stringify(completions));
     }
     function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
 
@@ -609,7 +618,7 @@
         students.forEach((name, idx) => {
             const chip = document.createElement('div');
             chip.className = 'draggable-chip';
-            chip.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
+            chip.innerHTML = `<span class="dock-emoji">${getEmoji(idx)}</span> <span class="dock-name">${name}</span>`;
             chip.addEventListener('pointerdown', (e) => startDrag(e, name, idx, chip));
             dock.appendChild(chip);
         });
@@ -628,7 +637,6 @@
             isDragging = true;
             rosterEl.classList.add('dragging');
             
-            // 트랜지션 끄고 현재 픽셀 좌표 고정
             const rect = rosterEl.getBoundingClientRect();
             rosterEl.style.transition = 'none';
             rosterEl.style.left = rect.left + 'px';
@@ -657,7 +665,6 @@
             document.removeEventListener('pointermove', onMove); 
             document.removeEventListener('pointerup', onUp); 
             
-            // 트랜지션 복구
             rosterEl.style.transition = 'left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1), right 0.4s, bottom 0.4s, transform 0.4s, max-width 0.4s, max-height 0.4s';
             
             const ww = window.innerWidth; 
@@ -713,7 +720,7 @@
         
         ghost = document.createElement('div');
         ghost.className = 'ghost-chip';
-        ghost.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
+        ghost.innerHTML = `<span class="dock-emoji" style="font-size:1.8rem;">${getEmoji(idx)}</span> <span style="font-weight:700;font-size:0.85rem;">${name}</span>`;
         document.body.appendChild(ghost);
         
         moveGhost(e);
@@ -886,7 +893,7 @@
         list.innerHTML = tasks.map(t => `
             <div class="task-edit-item">
                 <span class="icon-input">${t.icon}</span>
-                <span style="flex-grow:1; font-weight:700">${t.title}</span>
+                <span style="flex-grow:1; font-weight:700; font-size:1.05rem;">${t.title}</span>
                 <button class="btn-danger-sm" onclick="removeTask('${t.id}')" title="삭제">✕</button>
             </div>
         `).join('');
@@ -908,17 +915,17 @@
         }
     }
     function resetAllCompletions() {
-        if(confirm("모든 제출 기록을 초기화하시겠습니까? (과제 목록은 유지)")) {
+        if(confirm("모든 학생의 제출 기록을 초기화하시겠습니까? (과제 목록은 유지됩니다)")) {
             tasks.forEach(t => completions[t.id] = []);
-            saveData(); alert("초기화 완료!"); renderAdminOverview(); renderAdminByStudent();
+            saveData(); alert("기록 초기화 완료!"); renderAdminOverview(); renderAdminByStudent();
         }
     }
 
     function renderAdminStudents() {
         const list = document.getElementById('adminStudentList');
         list.innerHTML = students.map((name, idx) => `
-            <div style="background:var(--paper); border:1px solid var(--border); padding:6px 12px; border-radius:100px; font-weight:600; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
-                ${getEmoji(idx)} ${name} <span style="color:var(--accent); cursor:pointer;" onclick="removeStudent(${idx})">✕</span>
+            <div style="background:var(--paper); border:1px solid var(--border); padding:8px 14px; border-radius:100px; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:8px;">
+                ${getEmoji(idx)} ${name} <span style="color:var(--accent); cursor:pointer; margin-left:4px;" onclick="removeStudent(${idx})">✕</span>
             </div>
         `).join('');
     }
