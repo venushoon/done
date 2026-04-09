@@ -72,7 +72,7 @@
     
     .task-container {
         flex-grow: 1; padding: 24px; overflow-x: auto; overflow-y: hidden;
-        display: flex; gap: 20px; align-items: stretch;
+        display: flex; gap: 24px; align-items: stretch; 
     }
     
     /* Scrollbar Styling for Task Container */
@@ -81,41 +81,62 @@
     .task-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid var(--paper); }
 
     .task-col {
-        flex: 0 0 280px; /* 고정 너비로 한 줄 정렬 */
+        /* 핵심: 빈 공간을 자동으로 꽉 채우도록 flex-grow 설정, 화면이 좁아지면 최소 300px 유지, 너무 넓어지면 700px까지만 큼 */
+        flex: 1 1 300px; 
+        min-width: 300px; max-width: 700px;
+        
         background: rgba(255, 255, 255, 0.85); border: 2px solid var(--surface);
         border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
         display: flex; flex-direction: column; position: relative; 
-        transition: box-shadow 0.2s ease, border-color 0.2s ease; /* transform 제거로 깜빡임 방지 */
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
+    
+    /* 과제가 1개일 땐 가운데 정렬을 위해 마진 자동 부여 */
+    .task-container[data-count="1"] .task-col { margin: 0 auto; }
+    
+    /* 깜빡임 방지를 위해 transform 제외, 테두리 글로우 효과만 부여 */
     .task-col.drag-over {
         border-color: var(--navy); 
         box-shadow: inset 0 0 0 2px var(--navy), var(--shadow-lg); 
         background: var(--surface);
     }
     
-    .task-header { padding: 20px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; }
+    .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
     .task-icon {
         width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
         font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
     }
     .task-info { flex-grow: 1; }
-    .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; }
+    .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; transition: all 0.3s ease; }
     
     /* Progress Ring */
-    .progress-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; }
+    .progress-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; transition: all 0.3s ease; }
     .progress-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
     .progress-bg { fill: none; stroke: var(--paper); stroke-width: 4; }
     .progress-fill { fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
-    .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); }
+    .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); transition: all 0.3s ease; }
 
+    /* ★ 과제 개수에 따른 동적 폰트/사이즈 스케일링 ★ */
+    .task-container[data-count="1"] .task-icon { width: 76px; height: 76px; font-size: 3rem; border-radius: 20px; }
+    .task-container[data-count="1"] .task-title { font-size: 1.6rem; }
+    .task-container[data-count="1"] .progress-wrap { width: 64px; height: 64px; }
+    .task-container[data-count="1"] .progress-text { font-size: 1.1rem; }
+    
+    .task-container[data-count="2"] .task-icon { width: 60px; height: 60px; font-size: 2.2rem; border-radius: 16px; }
+    .task-container[data-count="2"] .task-title { font-size: 1.3rem; }
+    .task-container[data-count="2"] .progress-wrap { width: 52px; height: 52px; }
+    .task-container[data-count="2"] .progress-text { font-size: 0.9rem; }
+
+    /* 기둥 넓이에 따라 학생 칩 개수 자동 배열 */
     .task-body {
-        padding: 16px; flex-grow: 1; overflow-y: auto;
-        display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-content: start;
+        padding: 24px; flex-grow: 1; overflow-y: auto;
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; align-content: start;
     }
     
     .done-chip {
         background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
-        padding: 10px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px;
         box-shadow: var(--shadow-sm); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         cursor: pointer; position: relative; overflow: hidden;
     }
@@ -123,8 +144,8 @@
         content: '✕ 취소'; position: absolute; inset: 0; background: rgba(225, 29, 72, 0.9); color: white;
         display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; animation: fadeIn 0.2s;
     }
-    .done-emoji { font-size: 1.5rem; }
-    .done-name { font-size: 0.8rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
+    .done-emoji { font-size: 1.6rem; }
+    .done-name { font-size: 0.85rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
 
     /* Right Sidebar (Student Roster) */
     .student-sidebar {
@@ -184,7 +205,7 @@
     
     .admin-sidebar {
         width: 260px; background: var(--surface); border-right: 1px solid var(--border);
-        padding: 20px 0; display: flex; flex-direction: column; gap: 5px;
+        padding: 20px 0; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0;
     }
     .admin-tab-btn {
         padding: 16px 24px; text-align: left; background: transparent; border: none; font-size: 1.05rem;
@@ -219,17 +240,19 @@
     .status-title { font-size: 0.9rem; font-weight: 800; color: var(--ink-light); margin-bottom: 10px; }
     .chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip { padding: 6px 12px; border-radius: 100px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
-    .chip.done { background: #d1fae5; color: #047857; border: 1px solid #a7f3d0; }
-    .chip.missing { background: #ffe4e6; color: var(--accent); border: 1px solid #fecdd3; }
+    .chip.done { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .chip.missing { background: #fff1f2; color: var(--accent); border: 1px solid #fecdd3; }
 
-    /* Admin Tab 3: By Student */
+    /* Admin Tab 3: By Student (학생별 뷰 명확화 적용) */
     .student-record-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
-    .student-record-table th, .student-record-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    .student-record-table th, .student-record-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
     .student-record-table th { background: var(--paper); font-weight: 800; color: var(--ink-light); }
     .student-record-table tr:last-child td { border-bottom: none; }
-    .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; margin-right: 4px; margin-bottom: 4px; }
-    .badge.o { background: var(--success); color: white; }
-    .badge.x { background: var(--paper); color: var(--ink-light); text-decoration: line-through; }
+    
+    /* 과제별 상세 뱃지 디자인 */
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; margin: 0 6px 6px 0; border: 1px solid transparent; }
+    .badge.done { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+    .badge.missing { background: var(--paper); color: var(--ink-light); border-color: var(--border); opacity: 0.75; }
 
     @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
@@ -245,7 +268,7 @@
         .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; overflow-x: auto; padding: 0; }
         .admin-tab-btn { border-left: none; border-bottom: 4px solid transparent; white-space: nowrap; }
         .admin-tab-btn.active { border-left-color: transparent; border-bottom-color: var(--navy); }
-        .task-col { flex: 0 0 240px; }
+        .task-col { flex: 0 0 260px; min-width: 260px; }
         #floating-timer { transform: scale(0.8) translateX(-50%); top: auto; bottom: 20px; transform-origin: bottom center;}
     }
 </style>
@@ -308,12 +331,12 @@
                     <h2 class="panel-title">과제 및 명단 설정 <button class="btn-primary" onclick="resetAllCompletions()" style="background:var(--accent); font-size:0.9rem;">전체 제출기록 초기화</button></h2>
                     
                     <div class="admin-card">
-                        <h3 style="margin-top:0; color:var(--ink-light);">1. 과제 목록 (최대 6개)</h3>
+                        <h3 style="margin-top:0; color:var(--ink-light);">1. 과제 목록 관리 (자동 크기조절)</h3>
                         <div id="adminTaskList" style="margin-bottom: 15px;"></div>
                         <div style="display:flex; gap:10px;">
                             <input type="text" id="newTaskIcon" class="text-input" style="width:60px; text-align:center; font-size:1.2rem;" placeholder="이모지" value="📝">
                             <input type="text" id="newTaskTitle" class="text-input" placeholder="새로운 과제 이름 입력" onkeypress="if(event.key==='Enter') addTask()">
-                            <button class="btn-primary" onclick="addTask()">추가</button>
+                            <button class="btn-primary" onclick="addTask()">과제 추가</button>
                         </div>
                     </div>
 
@@ -337,7 +360,7 @@
                     <table class="student-record-table">
                         <thead>
                             <tr>
-                                <th style="width: 150px;">학생 이름</th>
+                                <th style="width: 180px;">학생 이름</th>
                                 <th>과제 달성 현황</th>
                             </tr>
                         </thead>
@@ -385,19 +408,17 @@
     const EMOJIS = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐢","🐸","🐵","🐧","🐥","🐬","🦔","🦉"];
     const TASK_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
 
-    let students = JSON.parse(localStorage.getItem('db_students_v2')) || ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우"];
-    let tasks = JSON.parse(localStorage.getItem('db_tasks_v2')) || [
+    let students = JSON.parse(localStorage.getItem('db_students_v3')) || ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우"];
+    let tasks = JSON.parse(localStorage.getItem('db_tasks_v3')) || [
         { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
-        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] },
-        { id: 't3', title: '수학 익힘책 12쪽', icon: '✏️', color: TASK_COLORS[2] },
-        { id: 't4', title: '알림장 제출', icon: '📝', color: TASK_COLORS[3] }
+        { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] }
     ];
-    let completions = JSON.parse(localStorage.getItem('db_completions_v2')) || {};
+    let completions = JSON.parse(localStorage.getItem('db_completions_v3')) || {};
 
     function saveData() {
-        localStorage.setItem('db_students_v2', JSON.stringify(students));
-        localStorage.setItem('db_tasks_v2', JSON.stringify(tasks));
-        localStorage.setItem('db_completions_v2', JSON.stringify(completions));
+        localStorage.setItem('db_students_v3', JSON.stringify(students));
+        localStorage.setItem('db_tasks_v3', JSON.stringify(tasks));
+        localStorage.setItem('db_completions_v3', JSON.stringify(completions));
     }
     function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
 
@@ -411,9 +432,12 @@
         renderUserView();
         initFloatingTimer();
         
-        // 가로 스크롤 (마우스 휠 지원)
+        // 보드 메인화면 가로스크롤 (마우스 휠 지원)
         const board = document.getElementById('taskGrid');
-        board.addEventListener('wheel', (e) => { if (e.deltaY !== 0) { e.preventDefault(); board.scrollLeft += e.deltaY; } });
+        board.addEventListener('wheel', (e) => { 
+            // 세로 스크롤(y)을 가로 스크롤(x)로 치환하여 편의성 제공
+            if (e.deltaY !== 0) { e.preventDefault(); board.scrollLeft += e.deltaY; } 
+        });
         
         document.body.addEventListener('click', () => { try{ if(audioCtx) audioCtx.resume(); }catch(e){} }, {once: true});
     }
@@ -451,6 +475,7 @@
     ========================================== */
     function renderUserView() {
         const grid = document.getElementById('taskGrid');
+        grid.setAttribute('data-count', tasks.length); // 갯수에 따른 동적 폰트/사이즈 적용용
         grid.innerHTML = '';
 
         tasks.forEach(task => {
@@ -626,18 +651,18 @@
         handle.addEventListener('pointerdown', (e) => {
             isDragging = true;
             const rect = timerEl.getBoundingClientRect();
-            // transform이 적용되어 있으므로 초기 드래그 시 transform 제거 후 고정
             timerEl.style.transform = 'none';
             timerEl.style.left = rect.left + 'px';
             timerEl.style.top = rect.top + 'px';
             
             offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
-            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointermove', onMove, {passive: false});
             document.addEventListener('pointerup', onUp);
         });
 
         function onMove(e) {
             if(!isDragging) return;
+            e.preventDefault();
             timerEl.style.left = (e.clientX - offsetX) + 'px';
             timerEl.style.top = (e.clientY - offsetY) + 'px';
         }
@@ -697,7 +722,6 @@
         `).join('');
     }
     function addTask() {
-        if(tasks.length >= 6) { alert("과제는 최대 6개까지만 만들 수 있습니다."); return; }
         const title = document.getElementById('newTaskTitle').value.trim();
         const icon = document.getElementById('newTaskIcon').value.trim() || '📝';
         if(title) {
@@ -752,7 +776,7 @@
                     <div class="insight-header">${task.icon} ${task.title}</div>
                     <div class="status-section">
                         <div class="status-title" style="color:var(--success)">✅ 제출완료 (${done.length}명)</div>
-                        <div class="chip-wrap">${done.length ? done.map(s => `<span class="chip done">${s}</span>`).join('') : '<span style="color:var(--border)">아직 제출자가 없습니다.</span>'}</div>
+                        <div class="chip-wrap">${done.length ? done.map(s => `<span class="chip done">${s}</span>`).join('') : '<span style="color:var(--ink-light)">아직 제출자가 없습니다.</span>'}</div>
                     </div>
                     <div class="status-section">
                         <div class="status-title" style="color:var(--accent)">🚨 미제출 (${missing.length}명)</div>
@@ -763,16 +787,19 @@
         }).join('');
     }
 
-    // 4. By Student (학생별 보기)
+    // 4. By Student (학생별 뷰 명확화: 이름과 O/X 표시)
     function renderAdminByStudent() {
         const container = document.getElementById('adminByStudentContent');
         container.innerHTML = students.map((student, idx) => {
             const taskBadges = tasks.map(task => {
                 const isDone = completions[task.id].includes(student);
-                return `<span class="badge ${isDone ? 'o' : 'x'}">${task.icon} ${isDone ? '제출' : '미제출'}</span>`;
+                return `<span class="badge ${isDone ? 'done' : 'missing'}">
+                            ${task.icon} <span>${task.title}</span> 
+                            <strong style="margin-left:4px;">${isDone ? 'O' : 'X'}</strong>
+                        </span>`;
             }).join('');
             return `<tr>
-                <td style="font-weight:700; font-size:1.1rem; color:var(--ink);">${getEmoji(idx)} ${student}</td>
+                <td style="font-weight:800; font-size:1.1rem; color:var(--ink);">${getEmoji(idx)} ${student}</td>
                 <td>${taskBadges}</td>
             </tr>`;
         }).join('');
