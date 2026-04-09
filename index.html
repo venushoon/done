@@ -24,6 +24,7 @@
         --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
         --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
         --shadow-lg: 0 15px 35px rgba(15, 23, 42, 0.08);
+        --shadow-xl: 0 25px 50px rgba(15, 23, 42, 0.15);
         
         --radius-sm: 8px;
         --radius-md: 16px;
@@ -65,70 +66,54 @@
     /* ─────────────────────────────────────────
        USER VIEW (STUDENT BOARD)
     ───────────────────────────────────────── */
-    #user-view { flex-grow: 1; display: flex; overflow: hidden; }
+    #user-view { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
 
-    /* Main Board (1x6 Horizontal Scroll) */
-    .board-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .board-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; width: 100%; }
     
     .task-container {
-        flex-grow: 1; padding: 24px; overflow-x: auto; overflow-y: hidden;
+        flex-grow: 1; padding: 30px; overflow-x: auto; overflow-y: hidden;
         display: flex; gap: 24px; align-items: stretch; 
     }
     
-    /* Scrollbar Styling for Task Container */
     .task-container::-webkit-scrollbar { height: 10px; }
     .task-container::-webkit-scrollbar-track { background: transparent; }
     .task-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid var(--paper); }
 
     .task-col {
-        /* 핵심: 빈 공간을 자동으로 꽉 채우도록 flex-grow 설정, 화면이 좁아지면 최소 300px 유지, 너무 넓어지면 700px까지만 큼 */
-        flex: 1 1 300px; 
-        min-width: 300px; max-width: 700px;
-        
+        flex: 1 1 300px; min-width: 300px; max-width: 700px;
         background: rgba(255, 255, 255, 0.85); border: 2px solid var(--surface);
         border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
         display: flex; flex-direction: column; position: relative; 
         transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
-    
-    /* 과제가 1개일 땐 가운데 정렬을 위해 마진 자동 부여 */
     .task-container[data-count="1"] .task-col { margin: 0 auto; }
     
-    /* 깜빡임 방지를 위해 transform 제외, 테두리 글로우 효과만 부여 */
-    .task-col.drag-over {
-        border-color: var(--navy); 
-        box-shadow: inset 0 0 0 2px var(--navy), var(--shadow-lg); 
-        background: var(--surface);
-    }
+    .task-col.drag-over { border-color: var(--navy); box-shadow: inset 0 0 0 2px var(--navy), var(--shadow-lg); background: var(--surface); }
     
     .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
     .task-icon {
         width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
-        font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
-        transition: all 0.3s ease;
+        font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); transition: all 0.3s ease;
     }
     .task-info { flex-grow: 1; }
     .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; transition: all 0.3s ease; }
     
-    /* Progress Ring */
     .progress-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; transition: all 0.3s ease; }
     .progress-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
     .progress-bg { fill: none; stroke: var(--paper); stroke-width: 4; }
     .progress-fill { fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
     .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); transition: all 0.3s ease; }
 
-    /* ★ 과제 개수에 따른 동적 폰트/사이즈 스케일링 ★ */
+    /* 과제 개수에 따른 스케일링 */
     .task-container[data-count="1"] .task-icon { width: 76px; height: 76px; font-size: 3rem; border-radius: 20px; }
     .task-container[data-count="1"] .task-title { font-size: 1.6rem; }
     .task-container[data-count="1"] .progress-wrap { width: 64px; height: 64px; }
     .task-container[data-count="1"] .progress-text { font-size: 1.1rem; }
-    
     .task-container[data-count="2"] .task-icon { width: 60px; height: 60px; font-size: 2.2rem; border-radius: 16px; }
     .task-container[data-count="2"] .task-title { font-size: 1.3rem; }
     .task-container[data-count="2"] .progress-wrap { width: 52px; height: 52px; }
     .task-container[data-count="2"] .progress-text { font-size: 0.9rem; }
 
-    /* 기둥 넓이에 따라 학생 칩 개수 자동 배열 */
     .task-body {
         padding: 24px; flex-grow: 1; overflow-y: auto;
         display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; align-content: start;
@@ -147,27 +132,46 @@
     .done-emoji { font-size: 1.6rem; }
     .done-name { font-size: 0.85rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
 
-    /* Right Sidebar (Student Roster) */
-    .student-sidebar {
-        width: 340px; background: var(--surface); border-left: 1px solid var(--border);
-        display: flex; flex-direction: column; z-index: 40; box-shadow: -2px 0 20px rgba(0,0,0,0.02);
+    /* ─────────────────────────────────────────
+       FLOATING STUDENT ROSTER
+    ───────────────────────────────────────── */
+    #floating-roster {
+        position: fixed; right: 30px; bottom: 30px; z-index: 900;
+        width: 320px; max-height: 60vh;
+        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
+        border: 1px solid var(--border); border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-xl); display: flex; flex-direction: column;
+        overflow: hidden; transition: all 0.3s ease;
     }
-    .sidebar-title { padding: 20px; font-size: 1rem; font-weight: 800; color: var(--navy); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+    .roster-header {
+        padding: 16px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+        display: flex; justify-content: space-between; align-items: center;
+        cursor: grab; user-select: none; touch-action: none;
+    }
+    .roster-header:active { cursor: grabbing; background: var(--paper); }
+    .roster-title-area { display: flex; align-items: center; gap: 8px; }
+    .roster-title { font-weight: 800; color: var(--navy); margin: 0; font-size: 1.05rem; }
+    .roster-count { font-size: 0.75rem; color: var(--navy); font-weight: 700; background: var(--navy-light); padding: 4px 10px; border-radius: 100px; }
     
+    .roster-controls { display: flex; gap: 8px; }
+    .roster-btn { width: 28px; height: 28px; border: none; background: var(--paper); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-light); font-weight: bold; font-size: 1rem; transition: 0.2s; }
+    .roster-btn:hover { background: var(--border); color: var(--ink); }
+
     .dock-container {
-        flex-grow: 1; padding: 20px; overflow-y: auto;
+        padding: 20px; overflow-y: auto; flex-grow: 1;
         display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start;
+        transition: max-height 0.3s ease, padding 0.3s ease;
     }
     
     .draggable-chip {
-        background: var(--paper); border: 1px solid var(--border); border-radius: 12px; 
+        background: var(--surface); border: 1px solid var(--border); border-radius: 12px; 
         padding: 12px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; 
-        cursor: grab; user-select: none; touch-action: none; transition: background 0.2s;
+        cursor: grab; user-select: none; touch-action: none; transition: background 0.2s, box-shadow 0.2s;
+        box-shadow: var(--shadow-sm);
     }
     .draggable-chip:hover { background: var(--navy-light); border-color: var(--navy); }
     .draggable-chip:active { cursor: grabbing; opacity: 0.5; }
-    
-    /* Dragging Ghost Clone */
+
     .ghost-chip {
         position: fixed; pointer-events: none; z-index: 9999;
         background: var(--surface); border: 2px solid var(--navy); border-radius: 12px;
@@ -180,8 +184,8 @@
     ───────────────────────────────────────── */
     #floating-timer {
         position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 1000;
-        background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 8px 20px 8px 12px;
+        background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 100px;
+        box-shadow: var(--shadow-lg); padding: 8px 20px 8px 12px;
         display: flex; align-items: center; gap: 16px;
     }
     .drag-handle { cursor: grab; padding: 10px; color: var(--ink-light); font-size: 1.2rem; line-height: 0.5; user-select: none; touch-action: none;}
@@ -221,7 +225,6 @@
     
     .panel-title { font-size: 1.4rem; font-weight: 800; color: var(--navy); margin: 0 0 24px 0; display: flex; justify-content: space-between; align-items: center; }
 
-    /* Admin Tab 1: Task & Students */
     .admin-card { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 24px; }
     .task-edit-item { display: flex; gap: 10px; align-items: center; background: var(--paper); padding: 12px; border-radius: var(--radius-md); margin-bottom: 8px; }
     .icon-input { width: 50px; text-align: center; font-size: 1.5rem; }
@@ -231,7 +234,28 @@
     .btn-primary:hover { background: #172554; }
     .btn-danger-sm { background: #ffe4e6; color: var(--accent); border: none; width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; }
 
-    /* Admin Tab 2: Overview */
+    /* Emoji Picker Styles */
+    .emoji-picker-container { position: relative; display: flex; align-items: stretch; }
+    .emoji-selector-btn {
+        width: 60px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+        background: var(--surface); font-size: 1.5rem; cursor: pointer; display: flex;
+        align-items: center; justify-content: center; transition: border-color 0.2s;
+    }
+    .emoji-selector-btn:hover { border-color: var(--navy); }
+    .emoji-picker {
+        position: absolute; bottom: calc(100% + 10px); left: 0;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+        padding: 12px; display: none; grid-template-columns: repeat(5, 1fr);
+        gap: 6px; z-index: 100;
+    }
+    .emoji-picker.show { display: grid; animation: fadeIn 0.2s; }
+    .emoji-option {
+        width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; cursor: pointer; border-radius: 8px; transition: background 0.2s;
+    }
+    .emoji-option:hover { background: var(--paper); }
+
     .insight-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 24px; }
     .insight-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
     .insight-header { background: var(--paper); padding: 16px 20px; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid var(--border); }
@@ -243,13 +267,11 @@
     .chip.done { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
     .chip.missing { background: #fff1f2; color: var(--accent); border: 1px solid #fecdd3; }
 
-    /* Admin Tab 3: By Student (학생별 뷰 명확화 적용) */
     .student-record-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
     .student-record-table th, .student-record-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
     .student-record-table th { background: var(--paper); font-weight: 800; color: var(--ink-light); }
     .student-record-table tr:last-child td { border-bottom: none; }
     
-    /* 과제별 상세 뱃지 디자인 */
     .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; margin: 0 6px 6px 0; border: 1px solid transparent; }
     .badge.done { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
     .badge.missing { background: var(--paper); color: var(--ink-light); border-color: var(--border); opacity: 0.75; }
@@ -262,14 +284,13 @@
 
     @media (max-width: 768px) {
         header { flex-direction: column; gap: 15px; padding: 15px; }
-        #user-view { flex-direction: column; }
-        .student-sidebar { width: 100%; height: 250px; border-left: none; border-top: 1px solid var(--border); flex-shrink: 0; }
         .admin-container { flex-direction: column; }
         .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; overflow-x: auto; padding: 0; }
         .admin-tab-btn { border-left: none; border-bottom: 4px solid transparent; white-space: nowrap; }
         .admin-tab-btn.active { border-left-color: transparent; border-bottom-color: var(--navy); }
         .task-col { flex: 0 0 260px; min-width: 260px; }
         #floating-timer { transform: scale(0.8) translateX(-50%); top: auto; bottom: 20px; transform-origin: bottom center;}
+        #floating-roster { width: 90%; right: 5%; bottom: 80px; max-height: 40vh; }
     }
 </style>
 </head>
@@ -304,18 +325,23 @@
         </div>
     </div>
 
+    <div id="floating-roster">
+        <div class="roster-header" id="roster-drag-handle">
+            <div class="roster-title-area">
+                <span class="roster-title">👇 내 이름표 던지기</span>
+                <span class="roster-count" id="totalStudentsCount">0명</span>
+            </div>
+            <div class="roster-controls">
+                <button class="roster-btn" onclick="toggleRoster()" id="toggleRosterBtn" title="최소화/최대화">−</button>
+            </div>
+        </div>
+        <div class="dock-container" id="studentDock"></div>
+    </div>
+
     <div id="user-view">
         <div class="board-main">
             <div class="task-container" id="taskGrid"></div>
         </div>
-
-        <aside class="student-sidebar">
-            <div class="sidebar-title">
-                <span>👇 내 이름표 던지기</span>
-                <span id="totalStudentsCount" style="color:var(--ink-light)">총 0명</span>
-            </div>
-            <div class="dock-container" id="studentDock"></div>
-        </aside>
     </div>
 
     <div id="admin-view">
@@ -331,10 +357,15 @@
                     <h2 class="panel-title">과제 및 명단 설정 <button class="btn-primary" onclick="resetAllCompletions()" style="background:var(--accent); font-size:0.9rem;">전체 제출기록 초기화</button></h2>
                     
                     <div class="admin-card">
-                        <h3 style="margin-top:0; color:var(--ink-light);">1. 과제 목록 관리 (자동 크기조절)</h3>
+                        <h3 style="margin-top:0; color:var(--ink-light);">1. 과제 목록 관리 (최대 6개)</h3>
                         <div id="adminTaskList" style="margin-bottom: 15px;"></div>
-                        <div style="display:flex; gap:10px;">
-                            <input type="text" id="newTaskIcon" class="text-input" style="width:60px; text-align:center; font-size:1.2rem;" placeholder="이모지" value="📝">
+                        
+                        <div style="display:flex; gap:10px; align-items: stretch; position: relative;">
+                            <div class="emoji-picker-container">
+                                <button class="emoji-selector-btn" id="emojiSelectorBtn" onclick="toggleEmojiPicker()">📝</button>
+                                <div class="emoji-picker" id="emojiPicker"></div>
+                            </div>
+                            
                             <input type="text" id="newTaskTitle" class="text-input" placeholder="새로운 과제 이름 입력" onkeypress="if(event.key==='Enter') addTask()">
                             <button class="btn-primary" onclick="addTask()">과제 추가</button>
                         </div>
@@ -407,6 +438,8 @@
     ========================================== */
     const EMOJIS = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐢","🐸","🐵","🐧","🐥","🐬","🦔","🦉"];
     const TASK_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
+    // 과제용 이모지 풀
+    const TASK_EMOJIS = ["📝", "📖", "🥛", "🧹", "🎨", "🏃‍♂️", "🎵", "🗣️", "💡", "💯", "🍎", "⏰", "🗑️", "🧽", "🪴", "🧩", "⚽", "🍽️", "💻", "🔬", "🖍️", "🎒", "🚌", "🪥", "🦷"];
 
     let students = JSON.parse(localStorage.getItem('db_students_v3')) || ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우"];
     let tasks = JSON.parse(localStorage.getItem('db_tasks_v3')) || [
@@ -431,11 +464,11 @@
         
         renderUserView();
         initFloatingTimer();
+        initFloatingRoster(); 
+        initEmojiPicker(); // 이모지 선택기 초기화
         
-        // 보드 메인화면 가로스크롤 (마우스 휠 지원)
         const board = document.getElementById('taskGrid');
         board.addEventListener('wheel', (e) => { 
-            // 세로 스크롤(y)을 가로 스크롤(x)로 치환하여 편의성 제공
             if (e.deltaY !== 0) { e.preventDefault(); board.scrollLeft += e.deltaY; } 
         });
         
@@ -443,6 +476,8 @@
     }
 
     function switchMode(mode) {
+        const floatingRoster = document.getElementById('floating-roster');
+        
         if(mode === 'admin') {
             const pwd = prompt("관리자 암호를 입력하세요 (기본: 0000)");
             if (pwd !== '0000') { alert("암호가 틀렸습니다."); return; }
@@ -450,12 +485,14 @@
             document.getElementById('admin-view').style.display = 'flex';
             document.getElementById('btn-user').classList.remove('active');
             document.getElementById('btn-admin').classList.add('active');
+            floatingRoster.style.display = 'none'; 
             renderAdminTasks(); renderAdminStudents(); renderAdminOverview(); renderAdminByStudent();
         } else {
             document.getElementById('user-view').style.display = 'flex';
             document.getElementById('admin-view').style.display = 'none';
             document.getElementById('btn-user').classList.add('active');
             document.getElementById('btn-admin').classList.remove('active');
+            floatingRoster.style.display = 'flex'; 
             renderUserView();
         }
     }
@@ -471,11 +508,39 @@
     }
 
     /* ==========================================
+       이모지 픽커 (Emoji Picker) 로직
+    ========================================== */
+    function initEmojiPicker() {
+        const picker = document.getElementById('emojiPicker');
+        picker.innerHTML = TASK_EMOJIS.map(e => `<div class="emoji-option" onclick="selectEmoji('${e}')">${e}</div>`).join('');
+        
+        // 바탕 화면 클릭 시 팝업 닫기
+        document.addEventListener('click', (e) => {
+            const container = e.target.closest('.emoji-picker-container');
+            if(!container) {
+                const pickerEl = document.getElementById('emojiPicker');
+                if(pickerEl && pickerEl.classList.contains('show')) {
+                    pickerEl.classList.remove('show');
+                }
+            }
+        });
+    }
+
+    function toggleEmojiPicker() {
+        document.getElementById('emojiPicker').classList.toggle('show');
+    }
+
+    function selectEmoji(emoji) {
+        document.getElementById('emojiSelectorBtn').textContent = emoji;
+        document.getElementById('emojiPicker').classList.remove('show');
+    }
+
+    /* ==========================================
        USER VIEW 렌더링
     ========================================== */
     function renderUserView() {
         const grid = document.getElementById('taskGrid');
-        grid.setAttribute('data-count', tasks.length); // 갯수에 따른 동적 폰트/사이즈 적용용
+        grid.setAttribute('data-count', tasks.length); 
         grid.innerHTML = '';
 
         tasks.forEach(task => {
@@ -523,7 +588,7 @@
     function renderDock() {
         const dock = document.getElementById('studentDock');
         dock.innerHTML = '';
-        document.getElementById('totalStudentsCount').textContent = `총 ${students.length}명`;
+        document.getElementById('totalStudentsCount').textContent = `${students.length}명`;
 
         students.forEach((name, idx) => {
             const chip = document.createElement('div');
@@ -535,7 +600,51 @@
     }
 
     /* ==========================================
-       드래그 앤 드롭 구현 (고스트 & 충돌 방지)
+       플로팅 명단 기능 (Draggable & Toggle)
+    ========================================== */
+    function initFloatingRoster() {
+        const rosterEl = document.getElementById('floating-roster');
+        const handle = document.getElementById('roster-drag-handle');
+        let isDragging = false, offsetX, offsetY;
+
+        handle.addEventListener('pointerdown', (e) => {
+            if(e.target.tagName.toLowerCase() === 'button') return; 
+            isDragging = true;
+            const rect = rosterEl.getBoundingClientRect();
+            rosterEl.style.bottom = 'auto'; 
+            rosterEl.style.right = 'auto';
+            rosterEl.style.left = rect.left + 'px';
+            rosterEl.style.top = rect.top + 'px';
+            
+            offsetX = e.clientX - rect.left; 
+            offsetY = e.clientY - rect.top;
+            document.addEventListener('pointermove', onMove, {passive: false});
+            document.addEventListener('pointerup', onUp);
+        });
+
+        function onMove(e) {
+            if(!isDragging) return;
+            e.preventDefault();
+            rosterEl.style.left = (e.clientX - offsetX) + 'px';
+            rosterEl.style.top = (e.clientY - offsetY) + 'px';
+        }
+        function onUp() { isDragging = false; document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); }
+    }
+
+    function toggleRoster() {
+        const dock = document.getElementById('studentDock');
+        const btn = document.getElementById('toggleRosterBtn');
+        if(dock.style.display === 'none') {
+            dock.style.display = 'grid';
+            btn.textContent = '−';
+        } else {
+            dock.style.display = 'none';
+            btn.textContent = '＋';
+        }
+    }
+
+    /* ==========================================
+       드래그 앤 드롭 구현
     ========================================== */
     let ghost = null, dragStudentName = null, currentHoverCol = null;
 
@@ -564,7 +673,7 @@
         const x = e.clientX || (e.touches && e.touches[0].clientX);
         const y = e.clientY || (e.touches && e.touches[0].clientY);
         
-        ghost.style.display = 'none'; // 잠시 숨기고 아래 판별
+        ghost.style.display = 'none'; 
         const elemBelow = document.elementFromPoint(x, y);
         ghost.style.display = 'flex';
         
@@ -639,7 +748,7 @@
     }
 
     /* ==========================================
-       플로팅 타이머 (Drag & Drop)
+       플로팅 타이머
     ========================================== */
     let totalSeconds = 20 * 60, timeRemaining = totalSeconds, timerInterval = null, isPlaying = false;
     
@@ -710,7 +819,6 @@
     /* ==========================================
        ADMIN VIEW 렌더링
     ========================================== */
-    // 1. Task Settings
     function renderAdminTasks() {
         const list = document.getElementById('adminTaskList');
         list.innerHTML = tasks.map(t => `
@@ -723,7 +831,7 @@
     }
     function addTask() {
         const title = document.getElementById('newTaskTitle').value.trim();
-        const icon = document.getElementById('newTaskIcon').value.trim() || '📝';
+        const icon = document.getElementById('emojiSelectorBtn').textContent.trim() || '📝';
         if(title) {
             const newId = 't' + Date.now();
             tasks.push({ id: newId, title, icon, color: TASK_COLORS[tasks.length % TASK_COLORS.length] });
@@ -744,7 +852,6 @@
         }
     }
 
-    // 2. Student List Settings
     function renderAdminStudents() {
         const list = document.getElementById('adminStudentList');
         list.innerHTML = students.map((name, idx) => `
@@ -765,7 +872,6 @@
         }
     }
 
-    // 3. Overview (한눈에 보기)
     function renderAdminOverview() {
         const container = document.getElementById('adminOverviewContent');
         container.innerHTML = tasks.map(task => {
@@ -787,7 +893,6 @@
         }).join('');
     }
 
-    // 4. By Student (학생별 뷰 명확화: 이름과 O/X 표시)
     function renderAdminByStudent() {
         const container = document.getElementById('adminByStudentContent');
         container.innerHTML = students.map((student, idx) => {
