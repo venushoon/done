@@ -70,12 +70,13 @@
        Floating Timer
     ========================================== */
     #floating-timer {
-        position: absolute; z-index: 1000; top: 16px; left: 50%; transform: translateX(-50%);
+        position: absolute; z-index: 1000;
         background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
         box-shadow: var(--shadow-md); padding: 6px 16px 6px 10px;
-        display: flex; align-items: center; gap: 16px; transition: box-shadow 0.2s;
+        display: flex; align-items: center; gap: 16px;
+        transition: box-shadow 0.2s;
     }
-    #floating-timer.dragging { box-shadow: var(--shadow-lg); opacity: 0.95; transition: none !important; }
+    #floating-timer.dragging { box-shadow: var(--shadow-lg); opacity: 0.95; }
     
     .drag-handle { cursor: grab; padding: 10px; color: var(--ink-light); font-size: 1.2rem; line-height: 0.5; user-select: none; touch-action: none;}
     .drag-handle:active { cursor: grabbing; color: var(--navy); }
@@ -96,8 +97,9 @@
     #user-view { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
     .task-container {
-        display: flex; gap: 24px; width: 100%; height: 100%;
-        padding: 40px 60px 220px 60px; /* 독바 공간 확보 및 액자형 가운데 정렬 */
+        display: flex; gap: 24px; 
+        width: 100%; height: 100%;
+        padding: 40px 40px 240px 40px; /* 하단 독바를 위한 240px 여백 (가운데 정렬 프레이밍) */
         overflow-x: auto; overflow-y: hidden;
         align-items: stretch; justify-content: center;
     }
@@ -107,12 +109,13 @@
     .task-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
     .task-col {
-        flex: 1 1 300px; min-width: 280px; max-width: 600px; 
+        flex: 1 1 300px; min-width: 280px; max-width: 600px; /* 과제가 많아도, 적어도 적절한 비율 유지 */
         background: rgba(255, 255, 255, 0.9); border: 2px solid var(--surface);
         border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
         display: flex; flex-direction: column; position: relative; 
         transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
+    
     .task-col.drag-over { border-color: var(--navy); box-shadow: inset 0 0 0 2px var(--navy), var(--shadow-lg); background: var(--surface); }
     
     .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
@@ -126,7 +129,7 @@
     .progress-fill { fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
     .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); transition: all 0.3s ease; }
 
-    /* 과제 개수에 따른 다이나믹 스케일링 */
+    /* 과제 1~2개일 때 동적 스케일링 */
     .task-container[data-count="1"] .task-col { max-width: 800px; margin: 0 auto; }
     .task-container[data-count="1"] .task-header { padding: 40px; }
     .task-container[data-count="1"] .task-icon { width: 80px; height: 80px; font-size: 3.5rem; border-radius: 20px; }
@@ -163,80 +166,56 @@
     .done-name { font-size: 0.85rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
 
     /* ==========================================
-       Mac OS Dock (Floating Roster) 
-       핵심: 위치에 따른 완벽한 스크롤제로 래핑
+       Mac OS Dock (Bottom Floating Roster)
     ========================================== */
-    #floating-roster {
-        position: fixed; z-index: 900;
-        background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.6); box-shadow: var(--shadow-dock);
-        display: flex; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s, border-radius 0.4s;
-    }
-    #floating-roster.dragging { transition: none !important; opacity: 0.9; }
-
-    .roster-header {
-        background: rgba(240, 244, 248, 0.9); display: flex; justify-content: space-between; align-items: center;
-        cursor: grab; padding: 12px 20px; flex-shrink: 0;
-    }
-    .roster-header:active { cursor: grabbing; }
-    .roster-title-area { display: flex; align-items: center; gap: 8px; }
-    .roster-title { font-weight: 800; color: var(--navy); margin: 0; font-size: 1rem; }
-    .roster-count { font-size: 0.75rem; color: var(--surface); font-weight: 700; background: var(--navy); padding: 4px 10px; border-radius: 100px; }
-
-    .dock-container { padding: 16px; display: flex; gap: 12px; }
-
-    /* --- SNAP: BOTTOM (기본) --- */
-    #floating-roster[data-position="bottom"] {
-        flex-direction: column; left: 50%; bottom: 20px; top: auto; transform: translateX(-50%);
-        border-radius: 24px; max-width: 90vw;
-    }
-    #floating-roster[data-position="bottom"] .roster-header { border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; }
-    #floating-roster[data-position="bottom"] .dock-container {
-        flex-direction: row; flex-wrap: wrap; justify-content: center;
-        max-height: 35vh; /* 초과 시 자동으로 윗줄로 쌓임 */
+    #mac-dock-wrapper {
+        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+        z-index: 900; width: 90%; max-width: 1400px;
+        pointer-events: none; /* 클릭 통과 (내부 컨테이너만 이벤트 받음) */
+        display: flex; justify-content: center;
     }
 
-    /* --- SNAP: LEFT --- */
-    #floating-roster[data-position="left"] {
-        flex-direction: column; left: 20px; top: 50%; bottom: auto; transform: translateY(-50%);
-        border-radius: 24px;
+    .mac-dock {
+        pointer-events: auto; /* 독바 본체는 이벤트 받음 */
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.6);
+        border-radius: 30px; padding: 16px 24px;
+        display: flex; flex-wrap: wrap; /* 핵심: 넘치면 자동으로 다음 줄로 넘어감 (스크롤 제로) */
+        justify-content: center; gap: 12px;
+        box-shadow: var(--shadow-dock);
+        transition: all 0.3s ease;
     }
-    #floating-roster[data-position="left"] .roster-header { border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; }
-    #floating-roster[data-position="left"] .dock-container {
-        flex-direction: column; flex-wrap: wrap; align-content: flex-start;
-        max-height: calc(100vh - 200px); /* 초과 시 자동으로 옆 열로 확장 */
+    
+    /* 독바 상단에 제목과 카운트 표시 */
+    .dock-title-bar {
+        width: 100%; text-align: center; margin-bottom: 12px;
+        font-size: 0.9rem; font-weight: 800; color: var(--ink-light);
+        display: flex; justify-content: center; align-items: center; gap: 8px;
     }
+    .roster-count { background: var(--navy); color: white; padding: 2px 8px; border-radius: 100px; font-size: 0.75rem; }
 
-    /* --- SNAP: RIGHT --- */
-    #floating-roster[data-position="right"] {
-        flex-direction: column; left: auto; right: 20px; top: 50%; bottom: auto; transform: translateY(-50%);
-        border-radius: 24px;
-    }
-    #floating-roster[data-position="right"] .roster-header { border-bottom: 1px solid var(--border); border-radius: 24px 24px 0 0; }
-    #floating-roster[data-position="right"] .dock-container {
-        flex-direction: column; flex-wrap: wrap; align-content: flex-start;
-        max-height: calc(100vh - 200px);
-    }
-
-    /* Mac OS Dock Hover Animation (칩 줌인 효과) */
     .dock-chip {
         background: var(--surface); border: 1px solid var(--border); border-radius: 16px; 
         padding: 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px;
         font-weight: 700; font-size: 0.85rem; color: var(--ink);
         cursor: grab; user-select: none; touch-action: none; 
-        box-shadow: var(--shadow-sm); min-width: 75px; flex-shrink: 0;
+        box-shadow: var(--shadow-sm); min-width: 75px;
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), margin 0.2s, box-shadow 0.2s;
         will-change: transform;
     }
+    /* Mac OS Dock Zoom Effect */
     .dock-chip:hover {
-        transform: scale(1.25) translateY(-8px); z-index: 10;
-        margin: 0 8px; /* 마우스 올렸을 때 양옆 아이콘 밀어내기 */
+        transform: scale(1.25) translateY(-12px);
+        z-index: 10;
+        margin: 0 10px; /* 주변 아이콘 밀어내기 */
         box-shadow: 0 15px 25px rgba(0,0,0,0.15);
         border-color: var(--navy); color: var(--navy);
     }
-    .dock-chip:active { cursor: grabbing; transform: scale(1); opacity: 0.5; }
+    .dock-chip:active { cursor: grabbing; transform: scale(1) translateY(0); opacity: 0.6; }
+    
     .dock-emoji { font-size: 1.8rem; line-height: 1; pointer-events: none; }
-    .dock-name { pointer-events: none; white-space: nowrap; }
+    .dock-name { pointer-events: none; }
 
     /* Dragging Ghost Clone */
     .ghost-chip {
@@ -272,6 +251,7 @@
     
     .panel-title { font-size: 1.4rem; font-weight: 800; color: var(--navy); margin: 0 0 24px 0; display: flex; justify-content: space-between; align-items: center; }
 
+    /* Admin Tab Elements */
     .admin-card { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 24px; }
     .task-edit-item { display: flex; gap: 10px; align-items: center; background: var(--paper); padding: 12px; border-radius: var(--radius-md); margin-bottom: 8px; }
     .icon-input { width: 50px; text-align: center; font-size: 1.5rem; }
@@ -282,16 +262,29 @@
     .btn-danger-sm { background: #ffe4e6; color: var(--accent); border: none; width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; transition: 0.2s;}
     .btn-danger-sm:hover { background: var(--accent); color: white; }
 
-    /* Emoji Picker */
+    /* Emoji Picker Styles */
     .emoji-picker-container { position: relative; display: flex; align-items: stretch; }
-    .emoji-selector-btn { width: 60px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s; }
+    .emoji-selector-btn {
+        width: 60px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+        background: var(--surface); font-size: 1.5rem; cursor: pointer; display: flex;
+        align-items: center; justify-content: center; transition: border-color 0.2s;
+    }
     .emoji-selector-btn:hover { border-color: var(--navy); }
-    .emoji-picker { position: absolute; top: calc(100% + 10px); left: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 12px; display: none; grid-template-columns: repeat(5, 1fr); gap: 6px; z-index: 100; }
+    .emoji-picker {
+        position: absolute; top: calc(100% + 10px); left: 0;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+        padding: 12px; display: none; grid-template-columns: repeat(5, 1fr);
+        gap: 6px; z-index: 100;
+    }
     .emoji-picker.show { display: grid; animation: fadeIn 0.2s; }
-    .emoji-option { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; border-radius: 8px; transition: background 0.2s; }
+    .emoji-option {
+        width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; cursor: pointer; border-radius: 8px; transition: background 0.2s;
+    }
     .emoji-option:hover { background: var(--paper); }
 
-    /* Insights & Tables */
+    /* Insight Overview */
     .insight-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 24px; }
     .insight-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
     .insight-header { background: var(--paper); padding: 16px 20px; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid var(--border); }
@@ -303,10 +296,12 @@
     .chip.done { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
     .chip.missing { background: #fff1f2; color: var(--accent); border: 1px solid #fecdd3; }
 
+    /* By Student Table */
     .student-record-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
     .student-record-table th, .student-record-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
     .student-record-table th { background: var(--paper); font-weight: 800; color: var(--ink-light); }
     .student-record-table tr:last-child td { border-bottom: none; }
+    
     .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; margin: 0 6px 6px 0; border: 1px solid transparent; }
     .badge.done { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
     .badge.missing { background: var(--paper); color: var(--ink-light); border-color: var(--border); opacity: 0.75; }
@@ -314,7 +309,18 @@
     @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
     .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 10; border-radius: var(--radius-lg); }
+
+    @media (max-width: 768px) {
+        header { flex-direction: column; gap: 15px; padding: 15px; height: auto; }
+        .admin-container { flex-direction: column; }
+        .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; overflow-x: auto; padding: 0; }
+        .admin-tab-btn { border-left: none; border-bottom: 4px solid transparent; white-space: nowrap; }
+        .admin-tab-btn.active { border-left-color: transparent; border-bottom-color: var(--navy); }
+        .task-col { flex: 0 0 260px; min-width: 260px; }
+        .task-container { padding-bottom: 280px; }
+    }
 </style>
 </head>
 <body>
@@ -355,16 +361,11 @@
         <div class="board-main">
             <div class="task-container" id="taskGrid"></div>
         </div>
-    </div>
-    
-    <div id="floating-roster" data-position="bottom">
-        <div class="roster-header" id="roster-drag-handle">
-            <div class="roster-title-area">
-                <span class="roster-title">👇 이름표 독(Dock)</span>
-                <span class="roster-count" id="totalStudentsCount">0명</span>
-            </div>
+
+        <div id="mac-dock-wrapper">
+            <div class="mac-dock" id="studentDock">
+                </div>
         </div>
-        <div class="dock-container" id="studentDock"></div>
     </div>
 
     <div id="admin-view">
@@ -380,8 +381,9 @@
                     <h2 class="panel-title">과제 및 명단 설정 <button class="btn-primary" onclick="resetAllCompletions()" style="background:var(--accent); font-size:0.9rem;">전체 제출기록 초기화</button></h2>
                     
                     <div class="admin-card">
-                        <h3 style="margin-top:0; color:var(--ink-light); margin-bottom:15px;">1. 과제 목록 관리 (최대 6개)</h3>
+                        <h3 style="margin-top:0; color:var(--ink-light); margin-bottom:15px;">1. 과제 목록 관리 (최대 6개 / 크기 자동조절)</h3>
                         <div id="adminTaskList" style="margin-bottom: 20px;"></div>
+                        
                         <div style="display:flex; gap:10px; align-items: stretch; position: relative;">
                             <div class="emoji-picker-container">
                                 <button class="emoji-selector-btn" id="emojiSelectorBtn" onclick="toggleEmojiPicker()">📝</button>
@@ -410,7 +412,12 @@
                 <div id="tab-bystudent" class="tab-pane">
                     <h2 class="panel-title">학생별 기록 확인 <button class="btn-primary" onclick="renderAdminByStudent()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
                     <table class="student-record-table">
-                        <thead><tr><th style="width: 200px;">학생 이름</th><th>과제 달성 현황</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th style="width: 200px;">학생 이름</th>
+                                <th>과제 달성 현황</th>
+                            </tr>
+                        </thead>
                         <tbody id="adminByStudentContent"></tbody>
                     </table>
                 </div>
@@ -457,17 +464,18 @@
     const TASK_EMOJIS = ["📝", "📖", "🥛", "🧹", "🎨", "🏃‍♂️", "🎵", "🗣️", "💡", "💯", "🍎", "⏰", "🗑️", "🧽", "🪴", "🧩", "⚽", "🍽️", "💻", "🔬", "🖍️", "🎒", "🚌", "🪥", "🦷"];
 
     const defaultStudents = ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우","윤지호","박수아","이도현","김태희","정우진","최다은","강민지","조윤호","황서진","백도윤","권시연","송건우","이은지"];
-    let students = JSON.parse(localStorage.getItem('db_students_final_v4')) || defaultStudents;
-    let tasks = JSON.parse(localStorage.getItem('db_tasks_final_v4')) || [
+    let students = JSON.parse(localStorage.getItem('db_students_final2')) || defaultStudents;
+    
+    let tasks = JSON.parse(localStorage.getItem('db_tasks_final2')) || [
         { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
         { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] }
     ];
-    let completions = JSON.parse(localStorage.getItem('db_completions_final_v4')) || {};
+    let completions = JSON.parse(localStorage.getItem('db_completions_final2')) || {};
 
     function saveData() {
-        localStorage.setItem('db_students_final_v4', JSON.stringify(students));
-        localStorage.setItem('db_tasks_final_v4', JSON.stringify(tasks));
-        localStorage.setItem('db_completions_final_v4', JSON.stringify(completions));
+        localStorage.setItem('db_students_final2', JSON.stringify(students));
+        localStorage.setItem('db_tasks_final2', JSON.stringify(tasks));
+        localStorage.setItem('db_completions_final2', JSON.stringify(completions));
     }
     function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
 
@@ -480,18 +488,27 @@
         
         renderUserView();
         initFloatingTimer();
-        initFloatingRoster(); 
         initEmojiPicker(); 
         
         const board = document.getElementById('taskGrid');
         board.addEventListener('wheel', (e) => { 
             if (e.deltaY !== 0) { e.preventDefault(); board.scrollLeft += e.deltaY; } 
         });
+        
         document.body.addEventListener('click', () => { try{ if(audioCtx) audioCtx.resume(); }catch(e){} }, {once: true});
+        
+        // 타이머 초기 위치 설정 (상단 헤더 정중앙)
+        setTimeout(() => {
+            const timer = document.getElementById('floating-timer');
+            timer.style.top = '16px'; 
+            timer.style.left = '50%'; 
+            timer.style.transform = 'translateX(-50%)';
+        }, 100);
     }
 
     function switchMode(mode) {
-        const floatingRoster = document.getElementById('floating-roster');
+        const dockWrapper = document.getElementById('mac-dock-wrapper');
+        
         if(mode === 'admin') {
             const pwd = prompt("관리자 암호를 입력하세요 (기본: 0000)");
             if (pwd !== '0000') { alert("암호가 틀렸습니다."); return; }
@@ -499,14 +516,14 @@
             document.getElementById('admin-view').style.display = 'flex';
             document.getElementById('btn-user').classList.remove('active');
             document.getElementById('btn-admin').classList.add('active');
-            floatingRoster.style.display = 'none'; 
+            dockWrapper.style.display = 'none'; 
             renderAdminTasks(); renderAdminStudents(); renderAdminOverview(); renderAdminByStudent();
         } else {
             document.getElementById('user-view').style.display = 'flex';
             document.getElementById('admin-view').style.display = 'none';
             document.getElementById('btn-user').classList.add('active');
             document.getElementById('btn-admin').classList.remove('active');
-            floatingRoster.style.display = 'flex'; 
+            dockWrapper.style.display = 'flex'; 
             renderUserView();
         }
     }
@@ -516,6 +533,7 @@
         document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         btnEl.classList.add('active');
+        
         if(tabId === 'tab-overview') renderAdminOverview();
         if(tabId === 'tab-bystudent') renderAdminByStudent();
     }
@@ -526,6 +544,7 @@
     function initEmojiPicker() {
         const picker = document.getElementById('emojiPicker');
         picker.innerHTML = TASK_EMOJIS.map(e => `<div class="emoji-option" onclick="selectEmoji('${e}')">${e}</div>`).join('');
+        
         document.addEventListener('click', (e) => {
             const container = e.target.closest('.emoji-picker-container');
             if(!container) {
@@ -589,8 +608,11 @@
 
     function renderDock() {
         const dock = document.getElementById('studentDock');
-        dock.innerHTML = '';
-        document.getElementById('totalStudentsCount').textContent = `${students.length}명`;
+        dock.innerHTML = `
+            <div class="dock-title-bar">
+                👇 이름표 던지기 <span class="roster-count">${students.length}명</span>
+            </div>
+        `;
 
         students.forEach((name, idx) => {
             const chip = document.createElement('div');
@@ -599,71 +621,6 @@
             chip.addEventListener('pointerdown', (e) => startDrag(e, name, idx, chip));
             dock.appendChild(chip);
         });
-    }
-
-    /* ==========================================
-       Mac OS Dock (플로팅 위치 및 자동 래핑 계산)
-    ========================================== */
-    function initFloatingRoster() {
-        const rosterEl = document.getElementById('floating-roster');
-        const handle = document.getElementById('roster-drag-handle');
-        let isDragging = false, offsetX, offsetY;
-
-        handle.addEventListener('pointerdown', (e) => {
-            isDragging = true;
-            rosterEl.classList.add('dragging');
-            const rect = rosterEl.getBoundingClientRect();
-            
-            // Transform & data-position 해제하여 드래그 중 오차 없앰
-            rosterEl.removeAttribute('data-position');
-            rosterEl.style.left = rect.left + 'px';
-            rosterEl.style.top = rect.top + 'px';
-            rosterEl.style.right = 'auto';
-            rosterEl.style.bottom = 'auto';
-            rosterEl.style.transform = 'none';
-            
-            offsetX = e.clientX - rect.left; 
-            offsetY = e.clientY - rect.top;
-            
-            document.addEventListener('pointermove', onMove, {passive: false});
-            document.addEventListener('pointerup', onUp);
-        });
-
-        function onMove(e) {
-            if(!isDragging) return;
-            e.preventDefault();
-            rosterEl.style.left = (e.clientX - offsetX) + 'px';
-            rosterEl.style.top = (e.clientY - offsetY) + 'px';
-        }
-        
-        function onUp(e) { 
-            isDragging = false; 
-            rosterEl.classList.remove('dragging');
-            document.removeEventListener('pointermove', onMove); 
-            document.removeEventListener('pointerup', onUp); 
-            
-            // 중앙점 계산 후 화면 가장자리에 Snap (위치 설정)
-            const rect = rosterEl.getBoundingClientRect();
-            const cy = rect.top + rect.height / 2;
-            const cx = rect.left + rect.width / 2;
-            const ww = window.innerWidth;
-            const wh = window.innerHeight;
-
-            // 인라인 스타일 해제하여 CSS의 Data-position 속성이 적용되도록 함
-            rosterEl.style.left = ''; rosterEl.style.top = '';
-            rosterEl.style.right = ''; rosterEl.style.bottom = '';
-            rosterEl.style.transform = '';
-
-            if (cy > wh * 0.7) {
-                rosterEl.setAttribute('data-position', 'bottom');
-            } else if (cx < ww * 0.35) {
-                rosterEl.setAttribute('data-position', 'left');
-            } else if (cx > ww * 0.65) {
-                rosterEl.setAttribute('data-position', 'right');
-            } else {
-                rosterEl.setAttribute('data-position', 'bottom');
-            }
-        }
     }
 
     /* ==========================================
@@ -789,7 +746,8 @@
             timerEl.style.left = rect.left + 'px';
             timerEl.style.top = rect.top + 'px';
             
-            offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
+            offsetX = e.clientX - rect.left; 
+            offsetY = e.clientY - rect.top;
             document.addEventListener('pointermove', onMove, {passive: false});
             document.addEventListener('pointerup', onUp);
         });
