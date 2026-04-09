@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>다했어요! 보드 (Ultimate Pro)</title>
+<title>다했어요! 보드 (Ultimate Mac OS Edition)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
 
 <style>
     /* ==========================================
-       CSS Variables & Global
+       CSS Variables & Reset
     ========================================== */
     :root {
         --ink: #0f172a;
@@ -21,12 +21,12 @@
         --navy-light: #eff6ff;
         --accent: #e11d48;
         --success: #10b981;
-        --warning: #f59e0b;
         --border: #e2e8f0;
         
         --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
         --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
         --shadow-lg: 0 15px 35px rgba(15, 23, 42, 0.08);
+        --shadow-dock: 0 20px 50px rgba(0, 0, 0, 0.15);
         
         --radius-sm: 8px;
         --radius-md: 16px;
@@ -45,11 +45,11 @@
     #app { display: flex; flex-direction: column; height: 100vh; position: relative; }
 
     /* ==========================================
-       Header (Top Bar)
+       Header
     ========================================== */
     header {
         display: flex; justify-content: space-between; align-items: center;
-        padding: 16px 30px; background: rgba(255, 255, 255, 0.9);
+        padding: 16px 30px; background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
         z-index: 50; flex-shrink: 0; height: 80px; position: relative;
     }
@@ -67,7 +67,7 @@
     .mode-btn.active { background: var(--surface); color: var(--navy); box-shadow: var(--shadow-sm); }
 
     /* ==========================================
-       Floating Timer (Init centered in Header)
+       Floating Timer
     ========================================== */
     #floating-timer {
         position: absolute; z-index: 1000;
@@ -94,22 +94,14 @@
     /* ==========================================
        USER VIEW (Main Board)
     ========================================== */
-    #user-view { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
+    #user-view { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-    /* 액자형 가운데 정렬을 위한 완벽한 프레이밍 레이아웃 */
-    .board-main {
-        flex-grow: 1; 
-        padding: 40px; 
-        padding-right: 390px; /* 명단 창(350px) + 여백(40px)을 위한 우측 빈공간 */
-        display: flex; justify-content: center; align-items: stretch;
-        overflow: hidden;
-    }
-    
     .task-container {
         display: flex; gap: 24px; 
-        width: 100%; max-width: 1400px; /* 과제가 많아도 예쁘게 정렬되도록 한계 설정 */
+        width: 100%; height: 100%;
+        padding: 40px 40px 240px 40px; /* 하단 독바를 위한 240px 여백 (가운데 정렬 프레이밍) */
         overflow-x: auto; overflow-y: hidden;
-        padding-bottom: 10px;
+        align-items: stretch; justify-content: center;
     }
     
     .task-container::-webkit-scrollbar { height: 10px; }
@@ -117,7 +109,7 @@
     .task-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
     .task-col {
-        flex: 1 1 300px; min-width: 280px;
+        flex: 1 1 300px; min-width: 280px; max-width: 600px; /* 과제가 많아도, 적어도 적절한 비율 유지 */
         background: rgba(255, 255, 255, 0.9); border: 2px solid var(--surface);
         border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
         display: flex; flex-direction: column; position: relative; 
@@ -126,18 +118,18 @@
     
     .task-col.drag-over { border-color: var(--navy); box-shadow: inset 0 0 0 2px var(--navy), var(--shadow-lg); background: var(--surface); }
     
-    .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; }
-    .task-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
+    .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; }
+    .task-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); transition: all 0.3s ease; }
     .task-info { flex-grow: 1; }
-    .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; }
+    .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; transition: all 0.3s ease; }
     
-    .progress-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; }
+    .progress-wrap { position: relative; width: 42px; height: 42px; flex-shrink: 0; transition: all 0.3s ease; }
     .progress-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
     .progress-bg { fill: none; stroke: var(--paper); stroke-width: 4; }
     .progress-fill { fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
-    .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); }
+    .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); transition: all 0.3s ease; }
 
-    /* ★ 1~2개 과제 시 다이나믹 자동 줌인 (화면 꽉 채움) ★ */
+    /* 과제 1~2개일 때 동적 스케일링 */
     .task-container[data-count="1"] .task-col { max-width: 800px; margin: 0 auto; }
     .task-container[data-count="1"] .task-header { padding: 40px; }
     .task-container[data-count="1"] .task-icon { width: 80px; height: 80px; font-size: 3.5rem; border-radius: 20px; }
@@ -148,7 +140,7 @@
     .task-container[data-count="1"] .done-emoji { font-size: 2rem; }
     .task-container[data-count="1"] .done-name { font-size: 1rem; }
 
-    .task-container[data-count="2"] .task-col { max-width: 600px; margin: 0 auto; }
+    .task-container[data-count="2"] .task-col { max-width: 550px; margin: 0 auto; }
     .task-container[data-count="2"] .task-header { padding: 30px; }
     .task-container[data-count="2"] .task-icon { width: 64px; height: 64px; font-size: 2.5rem; border-radius: 16px; }
     .task-container[data-count="2"] .task-title { font-size: 1.5rem; }
@@ -174,46 +166,66 @@
     .done-name { font-size: 0.85rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
 
     /* ==========================================
-       우측 스크롤제로 명단 창 (Floating Fixed Roster)
+       Mac OS Dock (Bottom Floating Roster)
     ========================================== */
-    #fixed-roster {
-        position: absolute; right: 30px; top: 30px; bottom: 30px; /* 화면 아래까지 꽉 차게 확장 */
-        width: 350px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
-        border: 1px solid var(--border); border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-lg); display: flex; flex-direction: column;
-        overflow: hidden; z-index: 100;
+    #mac-dock-wrapper {
+        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+        z-index: 900; width: 90%; max-width: 1400px;
+        pointer-events: none; /* 클릭 통과 (내부 컨테이너만 이벤트 받음) */
+        display: flex; justify-content: center;
+    }
+
+    .mac-dock {
+        pointer-events: auto; /* 독바 본체는 이벤트 받음 */
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.6);
+        border-radius: 30px; padding: 16px 24px;
+        display: flex; flex-wrap: wrap; /* 핵심: 넘치면 자동으로 다음 줄로 넘어감 (스크롤 제로) */
+        justify-content: center; gap: 12px;
+        box-shadow: var(--shadow-dock);
+        transition: all 0.3s ease;
     }
     
-    .roster-header {
-        padding: 20px 24px; background: var(--surface); border-bottom: 1px solid var(--border);
-        display: flex; justify-content: space-between; align-items: center;
+    /* 독바 상단에 제목과 카운트 표시 */
+    .dock-title-bar {
+        width: 100%; text-align: center; margin-bottom: 12px;
+        font-size: 0.9rem; font-weight: 800; color: var(--ink-light);
+        display: flex; justify-content: center; align-items: center; gap: 8px;
     }
-    .roster-title-area { display: flex; align-items: center; gap: 8px; }
-    .roster-title { font-weight: 800; color: var(--navy); margin: 0; font-size: 1.1rem; }
-    .roster-count { font-size: 0.8rem; color: var(--navy); font-weight: 700; background: var(--navy-light); padding: 4px 10px; border-radius: 100px; }
+    .roster-count { background: var(--navy); color: white; padding: 2px 8px; border-radius: 100px; font-size: 0.75rem; }
 
-    .dock-container {
-        padding: 20px; overflow-y: auto; flex-grow: 1;
-        display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: start;
+    .dock-chip {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 16px; 
+        padding: 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        font-weight: 700; font-size: 0.85rem; color: var(--ink);
+        cursor: grab; user-select: none; touch-action: none; 
+        box-shadow: var(--shadow-sm); min-width: 75px;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), margin 0.2s, box-shadow 0.2s;
+        will-change: transform;
     }
-    .dock-container::-webkit-scrollbar { width: 6px; }
-    .dock-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    /* Mac OS Dock Zoom Effect */
+    .dock-chip:hover {
+        transform: scale(1.25) translateY(-12px);
+        z-index: 10;
+        margin: 0 10px; /* 주변 아이콘 밀어내기 */
+        box-shadow: 0 15px 25px rgba(0,0,0,0.15);
+        border-color: var(--navy); color: var(--navy);
+    }
+    .dock-chip:active { cursor: grabbing; transform: scale(1) translateY(0); opacity: 0.6; }
     
-    .draggable-chip {
-        background: var(--surface); border: 1px solid var(--border); border-radius: 12px; 
-        padding: 12px 14px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1rem; 
-        cursor: grab; user-select: none; touch-action: none; transition: background 0.2s, box-shadow 0.2s;
-        box-shadow: var(--shadow-sm);
-    }
-    .draggable-chip:hover { background: var(--navy-light); border-color: var(--navy); }
-    .draggable-chip:active { cursor: grabbing; opacity: 0.5; }
+    .dock-emoji { font-size: 1.8rem; line-height: 1; pointer-events: none; }
+    .dock-name { pointer-events: none; }
 
+    /* Dragging Ghost Clone */
     .ghost-chip {
         position: fixed; pointer-events: none; z-index: 9999;
-        background: var(--surface); border: 2px solid var(--navy); border-radius: 12px;
-        padding: 12px 20px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.1rem;
-        box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.05);
+        background: var(--surface); border: 2px solid var(--navy); border-radius: 16px;
+        padding: 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        font-weight: 700; font-size: 0.85rem; color: var(--navy);
+        box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.1);
     }
+    .ghost-chip .dock-emoji { font-size: 1.8rem; }
 
     /* ==========================================
        ADMIN VIEW (교사 관리자)
@@ -239,7 +251,7 @@
     
     .panel-title { font-size: 1.4rem; font-weight: 800; color: var(--navy); margin: 0 0 24px 0; display: flex; justify-content: space-between; align-items: center; }
 
-    /* 통합된 설정 탭 카드 */
+    /* Admin Tab Elements */
     .admin-card { background: var(--surface); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 24px; }
     .task-edit-item { display: flex; gap: 10px; align-items: center; background: var(--paper); padding: 12px; border-radius: var(--radius-md); margin-bottom: 8px; }
     .icon-input { width: 50px; text-align: center; font-size: 1.5rem; }
@@ -250,7 +262,7 @@
     .btn-danger-sm { background: #ffe4e6; color: var(--accent); border: none; width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; transition: 0.2s;}
     .btn-danger-sm:hover { background: var(--accent); color: white; }
 
-    /* Emoji Picker */
+    /* Emoji Picker Styles */
     .emoji-picker-container { position: relative; display: flex; align-items: stretch; }
     .emoji-selector-btn {
         width: 60px; border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -300,14 +312,14 @@
     
     .confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 10; border-radius: var(--radius-lg); }
 
-    /* Responsive */
-    @media (max-width: 900px) {
-        .board-main { padding: 20px; padding-bottom: 300px; }
-        #fixed-roster { left: 20px; right: 20px; bottom: 20px; top: auto; width: auto; height: 260px; }
-        .header-right { width: auto; }
-        .brand { width: auto; }
-        #floating-timer { position: static; transform: none; box-shadow: none; border: none; }
-        header { flex-wrap: wrap; height: auto; justify-content: center; gap: 10px; }
+    @media (max-width: 768px) {
+        header { flex-direction: column; gap: 15px; padding: 15px; height: auto; }
+        .admin-container { flex-direction: column; }
+        .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; overflow-x: auto; padding: 0; }
+        .admin-tab-btn { border-left: none; border-bottom: 4px solid transparent; white-space: nowrap; }
+        .admin-tab-btn.active { border-left-color: transparent; border-bottom-color: var(--navy); }
+        .task-col { flex: 0 0 260px; min-width: 260px; }
+        .task-container { padding-bottom: 280px; }
     }
 </style>
 </head>
@@ -350,14 +362,9 @@
             <div class="task-container" id="taskGrid"></div>
         </div>
 
-        <div id="fixed-roster">
-            <div class="roster-header">
-                <div class="roster-title-area">
-                    <span class="roster-title">👇 내 이름표 던지기</span>
+        <div id="mac-dock-wrapper">
+            <div class="mac-dock" id="studentDock">
                 </div>
-                <div class="roster-count" id="totalStudentsCount">0명</div>
-            </div>
-            <div class="dock-container" id="studentDock"></div>
         </div>
     </div>
 
@@ -456,20 +463,19 @@
     const TASK_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4"];
     const TASK_EMOJIS = ["📝", "📖", "🥛", "🧹", "🎨", "🏃‍♂️", "🎵", "🗣️", "💡", "💯", "🍎", "⏰", "🗑️", "🧽", "🪴", "🧩", "⚽", "🍽️", "💻", "🔬", "🖍️", "🎒", "🚌", "🪥", "🦷"];
 
-    // 테스트하기 좋게 한국 학생 이름 25명 세팅 (우측 스크롤 테스트용)
     const defaultStudents = ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우","윤지호","박수아","이도현","김태희","정우진","최다은","강민지","조윤호","황서진","백도윤","권시연","송건우","이은지"];
-    let students = JSON.parse(localStorage.getItem('db_students_final')) || defaultStudents;
+    let students = JSON.parse(localStorage.getItem('db_students_final2')) || defaultStudents;
     
-    let tasks = JSON.parse(localStorage.getItem('db_tasks_final')) || [
+    let tasks = JSON.parse(localStorage.getItem('db_tasks_final2')) || [
         { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
         { id: 't2', title: '우유 다 마시기', icon: '🥛', color: TASK_COLORS[1] }
     ];
-    let completions = JSON.parse(localStorage.getItem('db_completions_final')) || {};
+    let completions = JSON.parse(localStorage.getItem('db_completions_final2')) || {};
 
     function saveData() {
-        localStorage.setItem('db_students_final', JSON.stringify(students));
-        localStorage.setItem('db_tasks_final', JSON.stringify(tasks));
-        localStorage.setItem('db_completions_final', JSON.stringify(completions));
+        localStorage.setItem('db_students_final2', JSON.stringify(students));
+        localStorage.setItem('db_tasks_final2', JSON.stringify(tasks));
+        localStorage.setItem('db_completions_final2', JSON.stringify(completions));
     }
     function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
 
@@ -494,7 +500,6 @@
         // 타이머 초기 위치 설정 (상단 헤더 정중앙)
         setTimeout(() => {
             const timer = document.getElementById('floating-timer');
-            const header = document.getElementById('main-header');
             timer.style.top = '16px'; 
             timer.style.left = '50%'; 
             timer.style.transform = 'translateX(-50%)';
@@ -502,6 +507,8 @@
     }
 
     function switchMode(mode) {
+        const dockWrapper = document.getElementById('mac-dock-wrapper');
+        
         if(mode === 'admin') {
             const pwd = prompt("관리자 암호를 입력하세요 (기본: 0000)");
             if (pwd !== '0000') { alert("암호가 틀렸습니다."); return; }
@@ -509,12 +516,14 @@
             document.getElementById('admin-view').style.display = 'flex';
             document.getElementById('btn-user').classList.remove('active');
             document.getElementById('btn-admin').classList.add('active');
+            dockWrapper.style.display = 'none'; 
             renderAdminTasks(); renderAdminStudents(); renderAdminOverview(); renderAdminByStudent();
         } else {
             document.getElementById('user-view').style.display = 'flex';
             document.getElementById('admin-view').style.display = 'none';
             document.getElementById('btn-user').classList.add('active');
             document.getElementById('btn-admin').classList.remove('active');
+            dockWrapper.style.display = 'flex'; 
             renderUserView();
         }
     }
@@ -599,13 +608,16 @@
 
     function renderDock() {
         const dock = document.getElementById('studentDock');
-        dock.innerHTML = '';
-        document.getElementById('totalStudentsCount').textContent = `총 ${students.length}명`;
+        dock.innerHTML = `
+            <div class="dock-title-bar">
+                👇 이름표 던지기 <span class="roster-count">${students.length}명</span>
+            </div>
+        `;
 
         students.forEach((name, idx) => {
             const chip = document.createElement('div');
-            chip.className = 'draggable-chip';
-            chip.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
+            chip.className = 'dock-chip';
+            chip.innerHTML = `<span class="dock-emoji">${getEmoji(idx)}</span> <span class="dock-name">${name}</span>`;
             chip.addEventListener('pointerdown', (e) => startDrag(e, name, idx, chip));
             dock.appendChild(chip);
         });
@@ -621,7 +633,7 @@
         
         ghost = document.createElement('div');
         ghost.className = 'ghost-chip';
-        ghost.innerHTML = `<span style="font-size:1.3rem">${getEmoji(idx)}</span> <span>${name}</span>`;
+        ghost.innerHTML = `<span class="dock-emoji">${getEmoji(idx)}</span> <span class="dock-name">${name}</span>`;
         document.body.appendChild(ghost);
         
         moveGhost(e);
@@ -716,7 +728,7 @@
     }
 
     /* ==========================================
-       플로팅 자유 타이머 (Drag & Drop)
+       플로팅 자유 타이머
     ========================================== */
     let totalSeconds = 20 * 60, timeRemaining = totalSeconds, timerInterval = null, isPlaying = false;
     
@@ -730,7 +742,6 @@
             timerEl.classList.add('dragging');
             const rect = timerEl.getBoundingClientRect();
             
-            // 드래그 시 transform 속성 해제하여 좌표 오차 방지
             timerEl.style.transform = 'none';
             timerEl.style.left = rect.left + 'px';
             timerEl.style.top = rect.top + 'px';
