@@ -28,7 +28,6 @@
         --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
         --shadow-lg: 0 15px 35px rgba(15, 23, 42, 0.08);
         --shadow-xl: 0 25px 50px rgba(15, 23, 42, 0.15);
-        --shadow-dock: 0 20px 50px rgba(0, 0, 0, 0.15);
         
         --radius-sm: 8px;
         --radius-md: 16px;
@@ -44,7 +43,6 @@
         background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px); background-size: 24px 24px;
     }
 
-    /* 드래그 중 텍스트 선택 방지 */
     body.is-dragging { user-select: none; -webkit-user-select: none; }
 
     #app { display: flex; flex-direction: column; height: 100vh; position: relative; }
@@ -76,7 +74,6 @@
     #user-view { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
     .board-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; width: 100%; }
 
-    /* JS adjustLayout()이 padding-bottom 제어 */
     .task-container {
         flex-grow: 1; padding: 30px; padding-bottom: 30px;
         overflow-x: auto; overflow-y: hidden;
@@ -86,7 +83,6 @@
     .task-container::-webkit-scrollbar-track { background: transparent; }
     .task-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid var(--paper); }
 
-    /* JS adjustLayout()이 max-height 제어 */
     .task-col {
         flex: 1 1 300px; min-width: 300px; max-width: 700px;
         background: rgba(255, 255, 255, 0.85); border: 2px solid var(--surface);
@@ -98,7 +94,8 @@
     .task-col.drag-over { border-color: var(--navy); box-shadow: inset 0 0 0 2px var(--navy), var(--shadow-lg); background: var(--surface); }
     
     .task-header { padding: 20px 24px; border-bottom: 2px dashed var(--border); display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
-    .task-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
+    .task-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); position: relative;}
+    
     .task-info { flex-grow: 1; }
     .task-title { font-size: 1.1rem; font-weight: 800; margin: 0; color: var(--ink); line-height: 1.3; }
     
@@ -108,7 +105,6 @@
     .progress-fill { fill: none; stroke: var(--success); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
     .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: var(--ink); }
 
-    /* Dynamic Scaling for 1-2 Tasks */
     .task-container[data-count="1"] .task-icon { width: 76px; height: 76px; font-size: 3rem; border-radius: 20px; }
     .task-container[data-count="1"] .task-title { font-size: 1.6rem; }
     .task-container[data-count="1"] .progress-wrap { width: 64px; height: 64px; }
@@ -118,7 +114,6 @@
     .task-container[data-count="2"] .progress-wrap { width: 52px; height: 52px; }
     .task-container[data-count="2"] .progress-text { font-size: 0.9rem; }
 
-    /* task-body: 내부 스크롤 허용. max-height는 JS가 설정 */
     .task-body {
         padding: 24px; flex-grow: 1; overflow-y: auto; overflow-x: hidden;
         display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; align-content: start;
@@ -132,15 +127,21 @@
         padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px;
         box-shadow: var(--shadow-sm); cursor: pointer; position: relative; overflow: hidden;
     }
-    /* popIn 애니메이션은 .chip-enter 클래스로만 트리거 (전체 재렌더 방지) */
     .done-chip.chip-enter { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
     body:not(.is-dragging) .done-chip:hover::after {
         content: '✕ 취소'; position: absolute; inset: 0; background: rgba(225, 29, 72, 0.9); color: white;
         display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; animation: fadeIn 0.2s;
     }
-    .done-emoji { font-size: 2.2rem; line-height: 1.2; pointer-events: none; }
-    .done-name { font-size: 0.95rem; font-weight: 700; color: var(--ink); white-space: nowrap; pointer-events: none; }
+    .done-emoji { font-size: 2.3rem; line-height: 1.2; }
+    .done-name { font-size: 0.95rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
+
+    .student-point-badge {
+        position: absolute; top: 4px; right: 4px; background: var(--warning); color: white;
+        font-size: 0.7rem; font-weight: 800; padding: 2px 5px; border-radius: 10px;
+        min-width: 18px; text-align: center; box-shadow: var(--shadow-sm); display: none; 
+    }
+    body.show-points .student-point-badge { display: block; } 
 
     /* ==========================================
        FLOATING STUDENT ROSTER (Mac OS Dock Style)
@@ -164,7 +165,6 @@
     .roster-btn { width: 28px; height: 28px; border: none; background: var(--paper); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink-light); font-weight: bold; font-size: 1rem; transition: 0.2s; }
     .roster-btn:hover { background: var(--border); color: var(--ink); }
 
-    /* Vertical (2 Column) - Left / Right */
     #floating-roster[data-layout="vertical"] { flex-direction: column; width: auto; max-width: 230px; max-height: 80vh; }
     #floating-roster[data-layout="vertical"] .roster-header { padding: 14px 15px; border-bottom: 1px solid var(--border); }
     #floating-roster[data-layout="vertical"] .roster-title-area { flex-direction: row; align-items: center; gap: 8px; }
@@ -172,42 +172,36 @@
         display: grid; grid-template-columns: repeat(2, 1fr); padding: 12px; gap: 8px; overflow-y: auto; overflow-x: hidden; justify-items: center;
     }
 
-    /* Horizontal (2 Row) - Bottom */
     #floating-roster[data-layout="horizontal"] { flex-direction: column; width: 95vw; max-width: 1200px; height: auto; }
     #floating-roster[data-layout="horizontal"] .roster-header { padding: 8px 18px; border-bottom: 1px solid var(--border); flex-direction: row; }
     #floating-roster[data-layout="horizontal"] .roster-title-area { flex-direction: row; align-items: center; }
     #floating-roster[data-layout="horizontal"] .dock-container { 
-        display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); /* 무조건 10등분 (2행 고정) */
+        display: grid; grid-template-columns: repeat(10, 1fr);
         padding: 10px 12px; gap: 6px; overflow-x: hidden; overflow-y: auto; justify-items: center;
     }
 
     .dock-container::-webkit-scrollbar { width: 6px; height: 6px; }
     .dock-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-    /* 독바 칩 디자인 */
     .draggable-chip {
         background: var(--surface); border: 1px solid var(--border); border-radius: 10px; 
         padding: 6px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 700; font-size: 0.78rem; 
         cursor: grab; user-select: none; touch-action: none; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-        box-shadow: var(--shadow-sm); width: 100%; max-width: 72px; flex-shrink: 0;
+        box-shadow: var(--shadow-sm); width: 100%; max-width: 72px; flex-shrink: 0; position: relative;
     }
-    
     .dock-emoji-wrap {
-        width: clamp(28px, 4vw, 36px); height: clamp(28px, 4vw, 36px); border-radius: 50%;
+        width: 32px; height: 32px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); pointer-events: none;
     }
-    .dock-emoji { font-size: clamp(1.2rem, 2vw, 1.5rem); pointer-events: none; line-height: 1.2; }
-    .dock-name { pointer-events: none; white-space: nowrap; color: var(--ink); font-size: clamp(0.65rem, 1vw, 0.78rem); overflow: hidden; text-overflow: ellipsis; max-width: 100%; padding: 0 2px;}
-
     body:not(.is-dragging) .draggable-chip:hover { 
         background: var(--surface); border-color: var(--navy); 
-        transform: scale(1.15) translateY(-4px); z-index: 10;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+        transform: scale(1.15) translateY(-4px); z-index: 10; box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
     }
     .draggable-chip:active { cursor: grabbing; transform: scale(1); opacity: 0.5; }
+    .dock-emoji { font-size: 1.5rem; pointer-events: none; line-height: 1.2; }
+    .dock-name { pointer-events: none; white-space: nowrap; color: var(--ink); font-size: 0.78rem; }
 
-    /* 드래그 잔상 (Ghost) - 깜빡임 원천 차단 */
     .ghost-chip {
         position: fixed; pointer-events: none !important; z-index: 9999;
         background: var(--surface); border: 2px solid var(--navy); border-radius: 12px;
@@ -215,7 +209,7 @@
         box-shadow: var(--shadow-lg); opacity: 0.95; transform: translate(-50%, -50%) scale(1.05); color: var(--navy);
     }
     .ghost-chip .dock-emoji-wrap { width: 44px; height: 44px; }
-    .ghost-chip .dock-emoji { font-size: 2rem; }
+    .ghost-chip .dock-emoji { font-size: 2rem; line-height: 1.2; }
 
     /* ==========================================
        FLOATING TIMER
@@ -259,6 +253,10 @@
     .btn-primary:hover { background: #172554; }
     .btn-danger-sm { background: #ffe4e6; color: var(--accent); border: none; width: 36px; height: 36px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; transition: 0.2s;}
     .btn-danger-sm:hover { background: var(--accent); color: white; }
+
+    .point-select { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none; font-size: 0.95rem; font-family: inherit; font-weight: bold; color: var(--ink); background: var(--paper); cursor: pointer;}
+    .point-select:focus { border-color: var(--navy); }
+
     .emoji-picker-container { position: relative; display: flex; align-items: stretch; }
     .emoji-selector-btn { width: 60px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s; }
     .emoji-selector-btn:hover { border-color: var(--navy); }
@@ -266,9 +264,17 @@
     .emoji-picker.show { display: grid; animation: fadeIn 0.2s; }
     .emoji-option { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; border-radius: 8px; transition: background 0.2s; }
     .emoji-option:hover { background: var(--paper); }
+    
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--success); }
+    input:checked + .slider:before { transform: translateX(26px); }
+
     .insight-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 24px; }
     .insight-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
-    .insight-header { background: var(--paper); padding: 16px 20px; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid var(--border); }
+    .insight-header { background: var(--paper); padding: 16px 20px; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;}
     .status-section { padding: 16px 20px; border-bottom: 1px dashed var(--border); }
     .status-section:last-child { border-bottom: none; }
     .status-title { font-size: 0.9rem; font-weight: 800; color: var(--ink-light); margin-bottom: 10px; }
@@ -276,13 +282,40 @@
     .chip { padding: 6px 12px; border-radius: 100px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
     .chip.done { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
     .chip.missing { background: #fff1f2; color: var(--accent); border: 1px solid #fecdd3; }
-    .student-record-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
-    .student-record-table th, .student-record-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
-    .student-record-table th { background: var(--paper); font-weight: 800; color: var(--ink-light); }
-    .student-record-table tr:last-child td { border-bottom: none; }
+    
     .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 0.9rem; margin: 0 6px 6px 0; border: 1px solid transparent; font-weight: 700;}
     .badge.done { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
     .badge.missing { background: var(--paper); color: var(--ink-light); border-color: var(--border); opacity: 0.75; }
+
+    /* 🟢 세련된 아코디언 학생 카드 리스트 */
+    .student-record-list { display: flex; flex-direction: column; gap: 12px; }
+    .student-record-card {
+        background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm); overflow: hidden; transition: box-shadow 0.2s;
+    }
+    .student-record-card:hover { box-shadow: var(--shadow-md); }
+    .sr-header {
+        display: flex; align-items: center; padding: 16px 20px; cursor: pointer; gap: 15px; transition: background 0.2s;
+    }
+    .sr-header:hover { background: var(--paper); }
+    .sr-profile { font-weight: 800; font-size: 1.1rem; color: var(--ink); width: 140px; display: flex; align-items: center; gap: 8px; }
+    .sr-points-ctrl { display: flex; align-items: center; gap: 8px; background: var(--paper); padding: 4px 8px; border-radius: 100px; border: 1px solid var(--border); }
+    .sr-points-ctrl button { border: none; background: var(--surface); border-radius: 50%; width: 26px; height: 26px; font-weight: bold; color: var(--navy); cursor: pointer; box-shadow: var(--shadow-sm); transition: 0.1s;}
+    .sr-points-ctrl button:hover { background: var(--navy); color: white; }
+    .sr-points-ctrl button:active { transform: scale(0.9); }
+    .sr-points-ctrl span { font-weight: 800; font-size: 1.1rem; color: var(--warning); min-width: 24px; text-align: center; }
+    .sr-badges { flex-grow: 1; display: flex; flex-wrap: wrap; gap: 6px; }
+    .sr-chevron { color: var(--ink-light); transition: transform 0.3s; font-size: 0.9rem; }
+    .sr-header.open .sr-chevron { transform: rotate(180deg); }
+    .sr-body { padding: 0 20px; max-height: 0; opacity: 0; overflow: hidden; transition: all 0.3s ease-in-out; background: var(--paper); }
+    .sr-body.open { padding: 20px; max-height: 800px; opacity: 1; border-top: 1px dashed var(--border); overflow-y: auto;}
+    
+    /* 190일 누적용 태그 스타일 */
+    .task-history-list { display: flex; flex-wrap: wrap; gap: 10px; }
+    .task-history-item { 
+        background: var(--surface); padding: 10px 16px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; 
+        display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+    }
 
     @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
@@ -297,6 +330,8 @@
         .admin-tab-btn { border-left: none; border-bottom: 4px solid transparent; white-space: nowrap; }
         .admin-tab-btn.active { border-left-color: transparent; border-bottom-color: var(--navy); }
         .task-col { flex: 0 0 260px; min-width: 260px; }
+        .sr-header { flex-direction: column; align-items: flex-start; }
+        .sr-profile { width: auto; }
     }
 </style>
 </head>
@@ -354,13 +389,25 @@
     <div id="admin-view">
         <div class="admin-container">
             <aside class="admin-sidebar">
-                <button class="admin-tab-btn active" onclick="switchAdminTab('tab-settings', this)">📝 과제 및 명단 설정</button>
-                <button class="admin-tab-btn" onclick="switchAdminTab('tab-overview', this)">👀 한눈에 보기</button>
-                <button class="admin-tab-btn" onclick="switchAdminTab('tab-bystudent', this)">🧑‍🎓 학생별 보기</button>
+                <button class="admin-tab-btn active" onclick="switchAdminTab('tab-settings', this)">📝 설정 및 관리</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('tab-overview', this)">👀 제출 한눈에 보기</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('tab-bystudent', this)">🏆 학생별 포인트 현황</button>
             </aside>
             <main class="admin-content">
                 <div id="tab-settings" class="tab-pane active">
-                    <h2 class="panel-title">과제 및 명단 설정 <button class="btn-primary" onclick="resetAllCompletions()" style="background:var(--accent); font-size:0.9rem;">전체 제출기록 초기화</button></h2>
+                    <h2 class="panel-title">과제 및 명단 설정 <button class="btn-primary" onclick="resetAllData()" style="background:var(--accent); font-size:0.9rem;">전체 기록 및 포인트 초기화</button></h2>
+                    
+                    <div class="admin-card" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <h3 style="margin:0 0 5px 0; color:var(--navy);">👀 학생 보드에 포인트 표시하기</h3>
+                            <p style="margin:0; font-size:0.85rem; color:var(--ink-light);">학생 독바와 과제 칩에 현재 획득한 포인트를 보여줍니다. (경쟁 방지를 위해 기본 숨김)</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showPointsToggle" onchange="togglePointsVisibility()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
                     <div class="admin-card">
                         <h3 style="margin-top:0; color:var(--ink-light);">1. 과제 목록 관리 (최대 6개)</h3>
                         <div id="adminTaskList" style="margin-bottom: 15px;"></div>
@@ -370,6 +417,11 @@
                                 <div class="emoji-picker" id="emojiPicker"></div>
                             </div>
                             <input type="text" id="newTaskTitle" class="text-input" placeholder="새로운 과제 이름 입력" onkeypress="if(event.key==='Enter') addTask()">
+                            <select id="newTaskPoints" class="point-select" title="과제 완수 시 획득 포인트">
+                                <option value="1">1점</option>
+                                <option value="2">2점</option>
+                                <option value="3">3점</option>
+                            </select>
                             <button class="btn-primary" onclick="addTask()">과제 추가</button>
                         </div>
                     </div>
@@ -383,15 +435,12 @@
                     </div>
                 </div>
                 <div id="tab-overview" class="tab-pane">
-                    <h2 class="panel-title">한눈에 보기 (제출 현황) <button class="btn-primary" onclick="renderAdminOverview()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
+                    <h2 class="panel-title">제출 한눈에 보기 <button class="btn-primary" onclick="renderAdminOverview()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
                     <div class="insight-grid" id="adminOverviewContent"></div>
                 </div>
                 <div id="tab-bystudent" class="tab-pane">
-                    <h2 class="panel-title">학생별 기록 확인 <button class="btn-primary" onclick="renderAdminByStudent()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
-                    <table class="student-record-table">
-                        <thead><tr><th style="width: 180px;">학생 이름</th><th>과제 달성 현황</th></tr></thead>
-                        <tbody id="adminByStudentContent"></tbody>
-                    </table>
+                    <h2 class="panel-title">🏆 학생별 과제 및 포인트 현황 <button class="btn-primary" onclick="renderAdminByStudent()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
+                    <div id="adminByStudentContent" class="student-record-list"></div>
                 </div>
             </main>
         </div>
@@ -432,22 +481,39 @@
     const sampleStudents = ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우","윤지호","박수아","이도현","김태희","정우진","최다은","강민지","조윤호"];
 
     /* ── State ── */
-    let students    = JSON.parse(localStorage.getItem('db_students_vf_live_fix2'))    || sampleStudents;
-    let tasks       = JSON.parse(localStorage.getItem('db_tasks_vf_live_fix2'))       || [
-        { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0] },
-        { id: 't2', title: '우유 다 마시기',   icon: '🥛', color: TASK_COLORS[1] },
-        { id: 't3', title: '1인 1역',          icon: '🧹', color: TASK_COLORS[2] }
+    let students    = JSON.parse(localStorage.getItem('db_students_vf_hagg_fix'))    || sampleStudents;
+    let tasks       = JSON.parse(localStorage.getItem('db_tasks_vf_hagg_fix'))       || [
+        { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0], points: 1 },
+        { id: 't2', title: '우유 다 마시기',   icon: '🥛', color: TASK_COLORS[1], points: 1 },
+        { id: 't3', title: '식물의 물 주기',   icon: '🪴', color: TASK_COLORS[2], points: 2 }
     ];
-    let completions = JSON.parse(localStorage.getItem('db_completions_vf_live_fix2')) || {};
+    let completions = JSON.parse(localStorage.getItem('db_completions_vf_hagg_fix')) || {};
+    let studentPoints = JSON.parse(localStorage.getItem('db_student_points_vf_hagg_fix')) || {};
+    let isPointsVisible = JSON.parse(localStorage.getItem('db_points_visible_vf_hagg_fix')) || false;
+    let studentHistory = JSON.parse(localStorage.getItem('db_student_history_vf_hagg_fix')) || {};
 
     function saveData() {
-        localStorage.setItem('db_students_vf_live_fix2',    JSON.stringify(students));
-        localStorage.setItem('db_tasks_vf_live_fix2',       JSON.stringify(tasks));
-        localStorage.setItem('db_completions_vf_live_fix2', JSON.stringify(completions));
+        localStorage.setItem('db_students_vf_hagg_fix',    JSON.stringify(students));
+        localStorage.setItem('db_tasks_vf_hagg_fix',       JSON.stringify(tasks));
+        localStorage.setItem('db_completions_vf_hagg_fix', JSON.stringify(completions));
+        localStorage.setItem('db_student_points_vf_hagg_fix',    JSON.stringify(studentPoints));
+        localStorage.setItem('db_points_visible_vf_hagg_fix',    JSON.stringify(isPointsVisible));
+        localStorage.setItem('db_student_history_vf_hagg_fix', JSON.stringify(studentHistory)); 
     }
+    
     function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
+    
+    function togglePointsVisibility() {
+        isPointsVisible = document.getElementById('showPointsToggle').checked;
+        if(isPointsVisible) {
+            document.body.classList.add('show-points');
+        } else {
+            document.body.classList.remove('show-points');
+        }
+        saveData();
+    }
 
-    /* ── [FIX 2] Layout Adjuster: 독바가 과제를 가리지 않게 동적 패딩 적용 ── */
+    /* ── Layout Adjuster ── */
     function adjustLayout() {
         const roster   = document.getElementById('floating-roster');
         const taskGrid = document.getElementById('taskGrid');
@@ -455,22 +521,16 @@
         if (!roster || !taskGrid || !header) return;
 
         const layout    = roster.getAttribute('data-layout');
-        const dockEl    = document.getElementById('studentDock');
-        const isCollapsed = dockEl && dockEl.style.display === 'none';
         const headerH   = header.getBoundingClientRect().height;
 
         if (layout === 'horizontal') {
             const rosterRect = roster.getBoundingClientRect();
             const rosterTop  = rosterRect.top;
-
-            // 하단 독 위로 스크롤 가능하게 여백 추가
             const pb = Math.max(window.innerHeight - rosterTop + 10, 20);
             taskGrid.style.paddingBottom = pb + 'px';
 
             const availH = rosterTop - headerH - 50; 
-            document.querySelectorAll('.task-col').forEach(col => {
-                col.style.maxHeight = Math.max(availH, 200) + 'px';
-            });
+            document.querySelectorAll('.task-col').forEach(col => { col.style.maxHeight = Math.max(availH, 200) + 'px'; });
             document.querySelectorAll('.task-body').forEach(tb => {
                 const headerEl = tb.previousElementSibling; 
                 const taskHeaderH = headerEl ? headerEl.getBoundingClientRect().height : 90;
@@ -483,7 +543,7 @@
         }
     }
 
-    /* ── [FIX 1] 증분 업데이트 (DOM 조작)로 깜빡임 완벽 제거 ── */
+    /* ── Incremental Updates ── */
     function updateProgress(taskId) {
         const task = tasks.find(t => t.id === taskId);
         if (!task) return;
@@ -497,11 +557,22 @@
         col.querySelector('.progress-text').textContent = cnt;
     }
 
+    function updateAllPointBadges() {
+        document.querySelectorAll('.student-point-badge').forEach(badge => {
+            const name = badge.dataset.badgeStudent;
+            if(name) {
+                badge.textContent = studentPoints[name] || 0;
+            }
+        });
+    }
+
     function createChipEl(taskId, name, sIdx) {
         const chip = document.createElement('div');
-        chip.className = 'done-chip chip-enter'; // 애니메이션 적용
+        chip.className = 'done-chip chip-enter'; 
         chip.dataset.student = name;
+        const pts = studentPoints[name] || 0;
         chip.innerHTML = `
+            <div class="student-point-badge" data-badge-student="${name}">${pts}</div>
             <span class="done-emoji">${getEmoji(sIdx)}</span>
             <span class="done-name">${name}</span>
         `;
@@ -521,7 +592,6 @@
     function removeChipFromBoard(taskId, name) {
         const body = document.getElementById(`task-body-${taskId}`);
         if (!body) return;
-        // escape 처리하여 이름 선택
         const chip = body.querySelector(`[data-student="${CSS.escape(name)}"]`);
         if (chip) chip.remove();
         updateProgress(taskId);
@@ -529,9 +599,20 @@
 
     /* ── Init ── */
     function init() {
-        tasks.forEach(t => { if (!completions[t.id]) completions[t.id] = []; });
+        tasks.forEach(t => { 
+            if (!completions[t.id]) completions[t.id] = []; 
+            if (!t.points) t.points = 1; 
+        });
         for (let tid in completions) { completions[tid] = completions[tid].filter(s => students.includes(s)); }
         
+        students.forEach(s => { 
+            if(studentPoints[s] === undefined) studentPoints[s] = 0; 
+            if(studentHistory[s] === undefined) studentHistory[s] = [];
+        });
+        
+        document.getElementById('showPointsToggle').checked = isPointsVisible;
+        togglePointsVisibility();
+
         renderUserView();
         initFloatingTimer();
         initFloatingRoster();
@@ -609,7 +690,9 @@
             col.innerHTML = `
                 <div class="task-header">
                     <div class="task-icon" style="background:${task.color}15; color:${task.color}">${task.icon}</div>
-                    <div class="task-info"><h3 class="task-title">${task.title}</h3></div>
+                    <div class="task-info">
+                        <h3 class="task-title">${task.title} <span style="font-size:0.8rem; color:var(--ink-light); font-weight:normal; background:var(--paper); padding:2px 6px; border-radius:10px;">${task.points}점</span></h3>
+                    </div>
                     <div class="progress-wrap">
                         <svg class="progress-svg" viewBox="0 0 44 44">
                             <circle class="progress-bg" cx="22" cy="22" r="18"></circle>
@@ -623,14 +706,15 @@
             `;
             grid.appendChild(col);
 
-            // 초기 로드 시: 기존 칩들을 애니메이션 없이 삽입
             const body = col.querySelector(`#task-body-${task.id}`);
             completions[task.id].forEach(name => {
                 const sIdx = students.indexOf(name);
                 const chip = document.createElement('div');
-                chip.className = 'done-chip'; // chip-enter 제거
+                chip.className = 'done-chip'; 
                 chip.dataset.student = name;
+                const pts = studentPoints[name] || 0;
                 chip.innerHTML = `
+                    <div class="student-point-badge" data-badge-student="${name}">${pts}</div>
                     <span class="done-emoji">${getEmoji(sIdx)}</span>
                     <span class="done-name">${name}</span>
                 `;
@@ -640,7 +724,7 @@
         });
 
         renderDock();
-        requestAnimationFrame(adjustLayout); // 렌더링 후 레이아웃 조정
+        requestAnimationFrame(adjustLayout);
     }
 
     /* ── Render Dock ── */
@@ -653,7 +737,9 @@
             const chip   = document.createElement('div');
             chip.className = 'draggable-chip';
             const pastel = PASTELS[idx % PASTELS.length];
+            const pts = studentPoints[name] || 0;
             chip.innerHTML = `
+                <div class="student-point-badge" data-badge-student="${name}">${pts}</div>
                 <div class="dock-emoji-wrap" style="background-color:${pastel};">
                     <span class="dock-emoji">${getEmoji(idx)}</span>
                 </div>
@@ -664,7 +750,7 @@
         });
     }
 
-    /* ── Floating Roster (Drag & Snap with Boundary) ── */
+    /* ── Floating Roster ── */
     function initFloatingRoster() {
         const rosterEl = document.getElementById('floating-roster');
         const handle   = document.getElementById('roster-drag-handle');
@@ -675,7 +761,6 @@
             if (e.target.tagName.toLowerCase() === 'button') return;
             isDragging = true;
             document.body.classList.add('is-dragging');
-            
             const rect = rosterEl.getBoundingClientRect();
             rosterEl.style.transition = 'none';
             rosterEl.style.left   = rect.left + 'px';
@@ -683,10 +768,8 @@
             rosterEl.style.right  = 'auto';
             rosterEl.style.bottom = 'auto';
             rosterEl.style.transform = 'none';
-            
             offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
-            
             document.addEventListener('pointermove', onMove, { passive: false });
             document.addEventListener('pointerup',   onUp);
         });
@@ -694,14 +777,12 @@
         function onMove(e) {
             if (!isDragging) return;
             e.preventDefault();
-            
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             
             animationFrameId = requestAnimationFrame(() => {
                 const ww = window.innerWidth, wh = window.innerHeight;
                 const rect = rosterEl.getBoundingClientRect();
                 
-                // 🟢 화면 밖으로 나가지 못하도록 Boundary(경계) 적용
                 let newLeft = e.clientX - offsetX;
                 let newTop  = e.clientY - offsetY;
                 
@@ -716,17 +797,14 @@
         function onUp(e) {
             isDragging = false;
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            
             document.body.classList.remove('is-dragging');
             document.removeEventListener('pointermove', onMove);
             document.removeEventListener('pointerup',   onUp);
 
             rosterEl.style.transition = 'left 0.4s cubic-bezier(0.16,1,0.3,1), top 0.4s cubic-bezier(0.16,1,0.3,1), right 0.4s, bottom 0.4s, transform 0.4s';
-
             const ww = window.innerWidth, wh = window.innerHeight;
             const cx = e.clientX, cy = e.clientY;
 
-            // 위치 기반 스냅 (Snap)
             if (cy > wh * 0.7) {
                 rosterEl.setAttribute('data-layout', 'horizontal');
                 rosterEl.style.left   = '50%'; rosterEl.style.top = 'auto';
@@ -748,10 +826,7 @@
                 rosterEl.style.bottom = '20px'; rosterEl.style.transform = 'translateX(-50%)';
             }
 
-            setTimeout(() => {
-                rosterEl.style.transition = 'none';
-                adjustLayout();
-            }, 420);
+            setTimeout(() => { rosterEl.style.transition = 'none'; adjustLayout(); }, 420);
         }
     }
 
@@ -763,10 +838,10 @@
         } else {
             dock.style.display = 'none'; btn.textContent = '＋';
         }
-        requestAnimationFrame(adjustLayout); 
+        requestAnimationFrame(adjustLayout);
     }
 
-    /* ── Drag & Drop (Student → Task) ── */
+    /* ── Drag & Drop ── */
     let ghost = null, dragStudentName = null, currentHoverCol = null;
 
     function startDrag(e, name, idx, sourceEl, pastelColor) {
@@ -800,8 +875,6 @@
         moveGhost(e);
         const x = e.clientX || (e.touches && e.touches[0].clientX);
         const y = e.clientY || (e.touches && e.touches[0].clientY);
-        
-        // CSS pointer-events:none 덕분에 별도 hide 없이 통과
         const colBelow = document.elementFromPoint(x, y)?.closest('.task-col') || null;
         if (currentHoverCol !== colBelow) {
             if (currentHoverCol) currentHoverCol.classList.remove('drag-over');
@@ -823,23 +896,49 @@
         dragStudentName = null;
     }
 
-    /* ── [FIX 1] DOM Incremental Updates ── */
     function handleDrop(taskId, studentName) {
         if (!completions[taskId]) completions[taskId] = [];
         if (completions[taskId].includes(studentName)) { playSound('error'); return; }
+        
+        const task = tasks.find(t => t.id === taskId);
+        const earnedPoints = task.points ? parseInt(task.points) : 1;
+
         completions[taskId].push(studentName);
+        studentPoints[studentName] = (studentPoints[studentName] || 0) + earnedPoints; 
+
+        if (!studentHistory[studentName].find(h => h.id === taskId)) {
+            studentHistory[studentName].push({
+                id: taskId,
+                title: task.title,
+                icon: task.icon,
+                points: earnedPoints
+            });
+        }
+
         saveData();
         playSound('drop');
         addChipToBoard(taskId, studentName); 
+        updateAllPointBadges(); 
+        updateAdminStudentRow(studentName); 
         fireConfetti(taskId);
     }
 
     function removeCompletion(taskId, studentName) {
         if (!confirm(`${studentName} 학생의 기록을 취소할까요?`)) return;
+        
+        const task = tasks.find(t => t.id === taskId);
+        const lostPoints = task.points ? parseInt(task.points) : 1;
+
         completions[taskId] = completions[taskId].filter(n => n !== studentName);
+        studentPoints[studentName] = Math.max(0, (studentPoints[studentName] || 0) - lostPoints); 
+        
+        studentHistory[studentName] = studentHistory[studentName].filter(h => h.id !== taskId);
+
         saveData();
         playSound('delete');
         removeChipFromBoard(taskId, studentName);
+        updateAllPointBadges(); 
+        updateAdminStudentRow(studentName);
     }
 
     /* ── Confetti ── */
@@ -941,7 +1040,7 @@
         document.getElementById('adminTaskList').innerHTML = tasks.map(t => `
             <div class="task-edit-item">
                 <span class="icon-input">${t.icon}</span>
-                <span style="flex-grow:1; font-weight:700; font-size:1.05rem;">${t.title}</span>
+                <span style="flex-grow:1; font-weight:700; font-size:1.05rem;">${t.title} <span style="font-size:0.8rem; color:var(--ink-light); margin-left:8px;">(${t.points}점)</span></span>
                 <button class="btn-danger-sm" onclick="removeTask('${t.id}')" title="삭제">✕</button>
             </div>
         `).join('');
@@ -950,9 +1049,11 @@
         if (tasks.length >= 6) { alert("과제는 최대 6개까지 추가할 수 있습니다."); return; }
         const title = document.getElementById('newTaskTitle').value.trim();
         const icon  = document.getElementById('emojiSelectorBtn').textContent.trim() || '📝';
+        const points = parseInt(document.getElementById('newTaskPoints').value) || 1; 
+
         if (title) {
             const newId = 't' + Date.now();
-            tasks.push({ id: newId, title, icon, color: TASK_COLORS[tasks.length % TASK_COLORS.length] });
+            tasks.push({ id: newId, title, icon, color: TASK_COLORS[tasks.length % TASK_COLORS.length], points: points });
             completions[newId] = [];
             document.getElementById('newTaskTitle').value = '';
             saveData(); renderAdminTasks();
@@ -960,18 +1061,25 @@
         }
     }
     function removeTask(id) {
-        if (!confirm("정말 이 과제를 삭제하시겠습니까?")) return;
+        if (!confirm("정말 이 과제를 삭제하시겠습니까?\n(삭제해도 학생들이 획득한 포인트 내역은 영구 보존됩니다)")) return;
         tasks = tasks.filter(t => t.id !== id);
-        delete completions[id];
+        delete completions[id]; 
         saveData(); renderAdminTasks();
         if (document.getElementById('user-view').style.display !== 'none') renderUserView();
     }
-    function resetAllCompletions() {
-        if (!confirm("모든 학생의 제출 기록을 초기화하시겠습니까? (과제 목록은 유지됩니다)")) return;
+    
+    function resetAllData() {
+        if (!confirm("모든 학생의 제출 기록과 누적 포인트를 0으로 초기화하시겠습니까? (과제와 명단은 유지됩니다)")) return;
         tasks.forEach(t => completions[t.id] = []);
-        saveData(); alert("기록 초기화 완료!");
+        students.forEach(s => {
+            studentPoints[s] = 0; 
+            studentHistory[s] = []; 
+        });
+        saveData(); alert("모든 기록과 포인트가 초기화되었습니다!");
         renderAdminOverview(); renderAdminByStudent();
-        if (document.getElementById('user-view').style.display !== 'none') renderUserView();
+        if (document.getElementById('user-view').style.display !== 'none') {
+            renderUserView();
+        }
     }
 
     /* ── Admin: Students ── */
@@ -986,7 +1094,10 @@
     function addStudent() {
         const input = document.getElementById('newStudentName'), name = input.value.trim();
         if (name) {
-            students.push(name); input.value = '';
+            students.push(name); 
+            studentPoints[name] = 0; 
+            studentHistory[name] = [];
+            input.value = '';
             saveData(); renderAdminStudents();
             if (document.getElementById('user-view').style.display !== 'none') renderDock();
         }
@@ -995,6 +1106,8 @@
         if (!confirm("이 학생을 명단에서 삭제할까요?")) return;
         const name = students[idx];
         students.splice(idx, 1);
+        delete studentPoints[name]; 
+        delete studentHistory[name];
         for (let tid in completions) completions[tid] = completions[tid].filter(s => s !== name);
         saveData(); renderAdminStudents();
         if (document.getElementById('user-view').style.display !== 'none') renderUserView();
@@ -1021,17 +1134,116 @@
         }).join('');
     }
 
-    function renderAdminByStudent() {
-        document.getElementById('adminByStudentContent').innerHTML = students.map((student, idx) => {
-            const badges = tasks.map(task => {
-                const isDone = completions[task.id].includes(student);
-                return `<span class="badge ${isDone ? 'done' : 'missing'}">${task.icon} <span>${task.title}</span> <strong style="margin-left:4px;">${isDone ? 'O' : 'X'}</strong></span>`;
-            }).join('');
-            return `<tr>
-                <td style="font-weight:800; font-size:1.1rem; color:var(--ink);">${getEmoji(idx)} ${student}</td>
-                <td>${badges}</td>
-            </tr>`;
+    function toggleStudentDetails(idx) {
+        const header = document.getElementById(`sr-header-${idx}`);
+        const body = document.getElementById(`sr-body-${idx}`);
+        header.classList.toggle('open');
+        body.classList.toggle('open');
+    }
+
+    /* 🌟 190일 대비 누적 합산 로직 (정규화된 키로 스마트 그룹핑) */
+    function generateStudentCardHTML(student, idx) {
+        const badges = tasks.map(task => {
+            const isDone = completions[task.id].includes(student);
+            return `<span class="badge ${isDone ? 'done' : 'missing'}">${task.icon} <span>${task.title}</span> <strong style="margin-left:4px;">${isDone ? 'O' : 'X'}</strong></span>`;
         }).join('');
+        
+        const currentPoints = studentPoints[student] || 0;
+        const historyLogs = studentHistory[student] || []; 
+        const safeName = student.replace(/\s/g, '');
+
+        // 🌟 정규화 그룹핑 로직 (공백 및 구두점 무시)
+        const aggregated = {};
+        historyLogs.forEach(log => {
+            const normalizedKey = log.title.replace(/[\s.,!?~()]+/g, '').toLowerCase();
+            
+            if(!aggregated[normalizedKey]) {
+                aggregated[normalizedKey] = {
+                    displayTitle: log.title, 
+                    icon: log.icon,
+                    count: 0,
+                    points: 0
+                };
+            }
+            aggregated[normalizedKey].count += 1;
+            aggregated[normalizedKey].points += (log.points || 1);
+        });
+
+        // 🌟 많이 한 순서대로 정렬
+        const aggregatedArray = Object.keys(aggregated).map(key => ({
+            title: aggregated[key].displayTitle,
+            icon: aggregated[key].icon,
+            count: aggregated[key].count,
+            points: aggregated[key].points
+        })).sort((a, b) => b.count - a.count);
+
+        let historyItemsHTML = `<div style="font-size:0.9rem; color:var(--ink-light); padding: 10px 0;">아직 완료한 과제가 없습니다.</div>`;
+        
+        if (aggregatedArray.length > 0) {
+            historyItemsHTML = `<div class="task-history-list">` + aggregatedArray.map(item => `
+                <div class="task-history-item">
+                    <span style="font-size:1.1rem;">${item.icon}</span>
+                    <span>${item.title}</span>
+                    <span style="color:var(--navy); font-weight:800; margin-left:4px;">${item.count}회</span>
+                    <span style="color:var(--accent); font-size:0.8rem; margin-left:2px;">(${item.points}P)</span>
+                </div>
+            `).join('') + `</div>`;
+        }
+
+        return `
+            <div class="sr-header" id="sr-header-${idx}" onclick="toggleStudentDetails(${idx})">
+                <div class="sr-profile">${getEmoji(idx)} ${student}</div>
+                <div class="sr-points-ctrl" onclick="event.stopPropagation()">
+                    <button onclick="manualAdjustPoint(event, '${student}', -1)">-</button>
+                    <span class="pt-display-${safeName}">${currentPoints}</span>
+                    <button onclick="manualAdjustPoint(event, '${student}', 1)">+</button>
+                </div>
+                <div class="sr-badges">${badges}</div>
+                <div class="sr-chevron">▼</div>
+            </div>
+            <div class="sr-body" id="sr-body-${idx}">
+                <h4 style="margin: 0 0 12px 0; color: var(--navy); font-size: 0.95rem; border-bottom: 2px dashed var(--border); padding-bottom: 8px;">
+                    🎁 누적 과제 수행 통계 <span style="font-weight:normal; font-size:0.8rem; color:var(--ink-light);">(과제를 삭제해도 영구 보존 / 횟수 자동 합산)</span>
+                </h4>
+                ${historyItemsHTML}
+                <div style="height: 15px;"></div>
+            </div>
+        `;
+    }
+
+    function renderAdminByStudent() {
+        const container = document.getElementById('adminByStudentContent');
+        container.innerHTML = students.map((student, idx) => {
+            return `<div class="student-record-card" id="student-card-${idx}">
+                        ${generateStudentCardHTML(student, idx)}
+                    </div>`;
+        }).join('');
+    }
+
+    function updateAdminStudentRow(studentName) {
+        const idx = students.indexOf(studentName);
+        if (idx === -1) return;
+        const card = document.getElementById(`student-card-${idx}`);
+        if (!card) return;
+        
+        const header = document.getElementById(`sr-header-${idx}`);
+        const isOpen = header && header.classList.contains('open');
+
+        card.innerHTML = generateStudentCardHTML(studentName, idx);
+
+        if (isOpen) {
+            document.getElementById(`sr-header-${idx}`).classList.add('open');
+            document.getElementById(`sr-body-${idx}`).classList.add('open');
+        }
+    }
+
+    function manualAdjustPoint(e, studentName, amount) {
+        if(e) e.stopPropagation();
+        studentPoints[studentName] = Math.max(0, (studentPoints[studentName] || 0) + amount);
+        saveData();
+        
+        updateAdminStudentRow(studentName);
+        updateAllPointBadges();
     }
 
     window.onload = init;
