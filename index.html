@@ -62,6 +62,10 @@
     .brand-text p { margin: 0; font-size: 0.85rem; color: var(--ink-light); font-weight: 600; }
     
     .mode-toggle { display: flex; background: var(--paper); border-radius: 100px; padding: 4px; border: 1px solid var(--border); }
+
+    .datetime-display { text-align: center; line-height: 1.15; flex-shrink: 0; }
+    .datetime-display .date-line { font-size: 0.85rem; font-weight: 700; color: var(--ink-light); }
+    .datetime-display .time-line { font-family: 'DM Sans', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
     .mode-btn {
         padding: 8px 20px; border: none; background: transparent; border-radius: 100px;
         font-weight: 700; color: var(--ink-light); cursor: pointer; transition: 0.2s; font-size: 0.95rem;
@@ -345,6 +349,10 @@
                 <h1>다했어요! 보드</h1>
                 <p>스스로 체크하는 우리 반 과제 관리</p>
             </div>
+        </div>
+        <div class="datetime-display" title="오늘 날짜와 현재 시간">
+            <div class="date-line" id="dateLine"></div>
+            <div class="time-line" id="timeLine">--:--:--</div>
         </div>
         <div class="mode-toggle">
             <button class="mode-btn active" onclick="switchMode('user')" id="btn-user">🎓 학생 보드</button>
@@ -848,6 +856,8 @@
         togglePointsVisibility();
 
         renderUserView();
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
         initFloatingTimer();
         initFloatingRoster();
         initEmojiPicker();
@@ -878,6 +888,24 @@
             const header = e.target.closest('[data-toggle-student]');
             if (header) toggleStudentDetails(header.dataset.toggleStudent);
         });
+    }
+
+    /* ── Header clock: 날짜·시각 표시 + 자정을 넘기면 새로고침 없이 오늘 보드로 자동 전환 ── */
+    function updateDateTime() {
+        const d = new Date();
+        const dateEl = document.getElementById('dateLine');
+        const timeEl = document.getElementById('timeLine');
+        if (dateEl) dateEl.textContent = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${['일','월','화','수','목','금','토'][d.getDay()]})`;
+        if (timeEl) timeEl.textContent = [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => String(v).padStart(2, '0')).join(':');
+        if (boardDate !== todayStr()) {
+            sanitizeState();
+            saveData();
+            if (document.getElementById('admin-view').style.display === 'flex') {
+                renderAdminOverview(); renderAdminByStudent();
+            } else {
+                renderUserView();
+            }
+        }
     }
 
     /* ── Mode Switch ── */
