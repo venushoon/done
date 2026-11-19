@@ -395,7 +395,7 @@
             </aside>
             <main class="admin-content">
                 <div id="tab-settings" class="tab-pane active">
-                    <h2 class="panel-title">과제 및 명단 설정 <button class="btn-primary" onclick="resetAllData()" style="background:var(--accent); font-size:0.9rem;">전체 기록 및 포인트 초기화</button></h2>
+                    <h2 class="panel-title">과제 및 명단 설정 <span style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn-primary" onclick="resetDailyCompletions()" style="background:var(--success); font-size:0.9rem;">오늘 제출만 초기화</button><button class="btn-primary" onclick="changeAdminPassword()" style="background:var(--paper); color:var(--ink); font-size:0.9rem;">관리자 암호 변경</button><button class="btn-primary" onclick="resetAllData()" style="background:var(--accent); font-size:0.9rem;">전체 기록 및 포인트 초기화</button></span></h2>
                     
                     <div class="admin-card" style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
@@ -433,6 +433,16 @@
                         </div>
                         <div style="display:flex; flex-wrap:wrap; gap:8px;" id="adminStudentList"></div>
                     </div>
+                    <div class="admin-card">
+                        <h3 style="margin-top:0; color:var(--ink-light);">3. 데이터 백업 · 복원 · 내보내기</h3>
+                        <p style="margin:0 0 15px 0; font-size:0.85rem; color:var(--ink-light);">같은 기기의 다른 탭과는 자동 동기화되지만, 다른 기기(전자칠판 ↔ 태블릿)와는 동기화되지 않습니다. 기기를 옮기거나 학기 말 기록을 남길 때는 아래 파일을 사용하세요.</p>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="exportBackup()">💾 백업 파일 저장 (JSON)</button>
+                            <button class="btn-primary" onclick="document.getElementById('importFile').click()" style="background:var(--paper); color:var(--ink);">📂 백업 파일 복원</button>
+                            <button class="btn-primary" onclick="exportCSV()" style="background:var(--success);">📊 생활기록부용 CSV 내보내기</button>
+                            <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importBackup(event)">
+                        </div>
+                    </div>
                 </div>
                 <div id="tab-overview" class="tab-pane">
                     <h2 class="panel-title">제출 한눈에 보기 <button class="btn-primary" onclick="renderAdminOverview()" style="background:var(--paper); color:var(--ink);">🔄 새로고침</button></h2>
@@ -454,6 +464,16 @@
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (type === 'alert') {
+                [0, 0.28, 0.56].forEach(off => {
+                    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.type = 'sine'; o.frequency.setValueAtTime(880, now + off);
+                    g.gain.setValueAtTime(0.25, now + off); g.gain.exponentialRampToValueAtTime(0.01, now + off + 0.22);
+                    o.start(now + off); o.stop(now + off + 0.22);
+                });
+                return;
+            }
             const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
             const now = audioCtx.currentTime;
@@ -481,27 +501,247 @@
     const sampleStudents = ["김민준","이서연","박지우","최예준","정윤아","강도윤","임하은","한주원","송지현","오민수","유진아","전진우","윤지호","박수아","이도현","김태희","정우진","최다은","강민지","조윤호"];
 
     /* ── State ── */
-    let students    = JSON.parse(localStorage.getItem('db_students_vf_hagg_fix'))    || sampleStudents;
-    let tasks       = JSON.parse(localStorage.getItem('db_tasks_vf_hagg_fix'))       || [
+    /* ── Safe storage load: 손상된 데이터가 있어도 흰 화면이 되지 않게 ── */
+    function safeParse(key, fallback, validate) {
+        try {
+            const raw = localStorage.getItem(key);
+            if (raw === null) return fallback;
+            const val = JSON.parse(raw);
+            if (validate && !validate(val)) throw new Error('invalid shape');
+            return val;
+        } catch(e) {
+            try { const raw = localStorage.getItem(key); if (raw !== null) localStorage.setItem(key + '_corrupt_backup', raw); } catch(_) {}
+            return fallback;
+        }
+    }
+    const _isArr = v => Array.isArray(v);
+    const _isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+    /* ── Schema v2: 학생 = {id, name, emoji, color} 객체, 전체 상태를 단일 blob(db_v2_state)으로 저장 ── */
+    const DEFAULT_TASKS = [
         { id: 't1', title: '아침 독서 기록장', icon: '📖', color: TASK_COLORS[0], points: 1 },
         { id: 't2', title: '우유 다 마시기',   icon: '🥛', color: TASK_COLORS[1], points: 1 },
         { id: 't3', title: '식물의 물 주기',   icon: '🪴', color: TASK_COLORS[2], points: 2 }
     ];
-    let completions = JSON.parse(localStorage.getItem('db_completions_vf_hagg_fix')) || {};
-    let studentPoints = JSON.parse(localStorage.getItem('db_student_points_vf_hagg_fix')) || {};
-    let isPointsVisible = JSON.parse(localStorage.getItem('db_points_visible_vf_hagg_fix')) || false;
-    let studentHistory = JSON.parse(localStorage.getItem('db_student_history_vf_hagg_fix')) || {};
-
-    function saveData() {
-        localStorage.setItem('db_students_vf_hagg_fix',    JSON.stringify(students));
-        localStorage.setItem('db_tasks_vf_hagg_fix',       JSON.stringify(tasks));
-        localStorage.setItem('db_completions_vf_hagg_fix', JSON.stringify(completions));
-        localStorage.setItem('db_student_points_vf_hagg_fix',    JSON.stringify(studentPoints));
-        localStorage.setItem('db_points_visible_vf_hagg_fix',    JSON.stringify(isPointsVisible));
-        localStorage.setItem('db_student_history_vf_hagg_fix', JSON.stringify(studentHistory)); 
+    function defaultStudents() {
+        return sampleStudents.map((name, i) => ({ id: 's' + i, name, emoji: EMOJIS[i % EMOJIS.length], color: PASTELS[i % PASTELS.length] }));
     }
-    
-    function getEmoji(idx) { return EMOJIS[idx % EMOJIS.length]; }
+    function migrateV1toV2() {
+        const v1Students = safeParse('db_students_vf_hagg_fix', null, _isArr);
+        if (!v1Students) return null;
+        const v1Tasks       = safeParse('db_tasks_vf_hagg_fix', null, _isArr);
+        const v1Completions = safeParse('db_completions_vf_hagg_fix', {}, _isObj);
+        const v1Points      = safeParse('db_student_points_vf_hagg_fix', {}, _isObj);
+        const v1Visible     = safeParse('db_points_visible_vf_hagg_fix', false, v => typeof v === 'boolean');
+        const v1History     = safeParse('db_student_history_vf_hagg_fix', {}, _isObj);
+        const names = [...new Set(v1Students.map(normalizeName).filter(Boolean))];
+        const studs = names.map((name, i) => ({ id: 's_mig_' + i, name, emoji: EMOJIS[i % EMOJIS.length], color: PASTELS[i % PASTELS.length] }));
+        const idByName = {}; studs.forEach(st => idByName[st.name] = st.id);
+        const comps = {};
+        for (const tid in v1Completions) {
+            if (Array.isArray(v1Completions[tid])) comps[tid] = v1Completions[tid].map(n => idByName[normalizeName(n)]).filter(Boolean);
+        }
+        const points = {}, hist = {};
+        studs.forEach(st => {
+            points[st.id] = typeof v1Points[st.name] === 'number' ? v1Points[st.name] : 0;
+            const h = Array.isArray(v1History[st.name]) ? v1History[st.name] : [];
+            hist[st.id] = h.map(e => ({ taskId: e.taskId || e.id || '', title: e.title || '', icon: e.icon || '', points: e.points || 1, date: e.date || null }));
+        });
+        return { schemaVersion: 2, students: studs, tasks: (v1Tasks && v1Tasks.length) ? v1Tasks : DEFAULT_TASKS,
+                 completions: comps, studentPoints: points, studentHistory: hist,
+                 isPointsVisible: v1Visible, boardDate: todayStr(), adminPwHash: null, studentSeq: studs.length };
+    }
+
+    let _state = safeParse('db_v2_state', null, v => v === null || (_isObj(v) && v.schemaVersion === 2));
+    let _migratedFromV1 = false;
+    if (!_state) { _state = migrateV1toV2(); if (_state) _migratedFromV1 = true; }
+    if (!_state) _state = { schemaVersion: 2, students: defaultStudents(), tasks: DEFAULT_TASKS, completions: {},
+                            studentPoints: {}, studentHistory: {}, isPointsVisible: false,
+                            boardDate: null, adminPwHash: null, studentSeq: sampleStudents.length };
+
+    let students        = _isArr(_state.students) ? _state.students : defaultStudents();
+    let tasks           = _isArr(_state.tasks) && _state.tasks.length ? _state.tasks : DEFAULT_TASKS.slice();
+    let completions     = _isObj(_state.completions) ? _state.completions : {};
+    let studentPoints   = _isObj(_state.studentPoints) ? _state.studentPoints : {};
+    let studentHistory  = _isObj(_state.studentHistory) ? _state.studentHistory : {};
+    let isPointsVisible = typeof _state.isPointsVisible === 'boolean' ? _state.isPointsVisible : false;
+    let boardDate       = typeof _state.boardDate === 'string' ? _state.boardDate : null;
+    let adminPwHash     = typeof _state.adminPwHash === 'string' ? _state.adminPwHash : null;
+    let studentSeq      = typeof _state.studentSeq === 'number' && !isNaN(_state.studentSeq) ? _state.studentSeq : students.length;
+
+    let _saveAlertShown = false;
+    let _lastSavedBlob = '';
+    function currentStateBlob() {
+        return { schemaVersion: 2, students, tasks, completions, studentPoints, studentHistory, isPointsVisible, boardDate, adminPwHash, studentSeq };
+    }
+    function saveData() {
+        try {
+            _lastSavedBlob = JSON.stringify(currentStateBlob());
+            localStorage.setItem('db_v2_state', _lastSavedBlob);
+        } catch(e) {
+            if (!_saveAlertShown) { _saveAlertShown = true; alert('저장에 실패했습니다. 브라우저 저장 공간이 부족하거나 데이터가 손상되었을 수 있습니다.'); }
+        }
+    }
+    function applyStateBlob(obj) {
+        if (_isArr(obj.students)) students = obj.students;
+        if (_isArr(obj.tasks) && obj.tasks.length) tasks = obj.tasks;
+        if (_isObj(obj.completions)) completions = obj.completions;
+        if (_isObj(obj.studentPoints)) studentPoints = obj.studentPoints;
+        if (_isObj(obj.studentHistory)) studentHistory = obj.studentHistory;
+        if (typeof obj.isPointsVisible === 'boolean') isPointsVisible = obj.isPointsVisible;
+        if (typeof obj.boardDate === 'string' || obj.boardDate === null) boardDate = obj.boardDate;
+        if (typeof obj.adminPwHash === 'string' || obj.adminPwHash === null) adminPwHash = obj.adminPwHash;
+        if (typeof obj.studentSeq === 'number' && !isNaN(obj.studentSeq)) studentSeq = obj.studentSeq;
+    }
+    /* 같은 기기·같은 브라우저의 다른 탭과만 동기화된다 (다른 기기와는 백엔드 없이는 불가 → 백업 파일로 이동) */
+    window.addEventListener('storage', (e) => {
+        if (e.key !== 'db_v2_state' || !e.newValue || e.newValue === _lastSavedBlob) return;
+        try {
+            const obj = JSON.parse(e.newValue);
+            if (!obj || obj.schemaVersion !== 2) return;
+            applyStateBlob(obj);
+            _lastSavedBlob = e.newValue;
+            sanitizeState();
+            const tg = document.getElementById('showPointsToggle');
+            if (tg) tg.checked = isPointsVisible;
+            document.body.classList.toggle('show-points', isPointsVisible);
+            if (document.getElementById('admin-view').style.display === 'flex') {
+                renderAdminTasks(); renderAdminStudents(); renderAdminOverview(); renderAdminByStudent();
+            } else {
+                renderUserView();
+            }
+        } catch(_) {}
+    });
+
+    /* ── Escaping & normalization ── */
+    function escapeHtml(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function escapeAttr(v) { return escapeHtml(v); }
+    function normalizeName(v) { return String(v ?? '').trim().replace(/\s+/g, ' '); }
+    function normalizeKey(v) { return normalizeName(v).replace(/[\s.,!?~()]+/g, '').toLowerCase(); }
+    function todayStr() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+    function studentById(id) { return students.find(st => st.id === id) || null; }
+    function nameOf(id) { const st = studentById(id); return st ? st.name : '(삭제된 학생)'; }
+    function emojiOf(id) { const st = studentById(id); return st ? st.emoji : '🙂'; }
+    function ensureStudentRecord(id) {
+        if (studentPoints[id] === undefined) studentPoints[id] = 0;
+        if (!Array.isArray(studentHistory[id])) studentHistory[id] = [];
+    }
+    function genStudentId() {
+        let id;
+        do { id = 's' + Date.now().toString(36) + '_' + (studentSeq++).toString(36) + Math.floor(Math.random() * 1296).toString(36); } while (studentById(id));
+        return id;
+    }
+    function sanitizeState() {
+        const seen = new Set();
+        students = students.filter(st => {
+            if (!st || typeof st.id !== 'string' || typeof st.name !== 'string' || !st.name) return false;
+            if (seen.has(st.id)) return false;
+            seen.add(st.id);
+            st.name = normalizeName(st.name);
+            if (!st.emoji) st.emoji = '🙂';
+            if (!st.color) st.color = PASTELS[0];
+            return true;
+        });
+        tasks.forEach(t => {
+            if (!Array.isArray(completions[t.id])) completions[t.id] = [];
+            if (!t.points) t.points = 1;
+        });
+        for (const tid in completions) {
+            if (Array.isArray(completions[tid])) completions[tid] = completions[tid].filter(id => studentById(id));
+        }
+        /* 날짜가 바뀌면 오늘 제출판만 비운다 (포인트·누적 히스토리는 유지) */
+        const today = todayStr();
+        if (boardDate !== today) {
+            tasks.forEach(t => completions[t.id] = []);
+            boardDate = today;
+        }
+        if (typeof studentSeq !== 'number' || isNaN(studentSeq) || studentSeq < students.length) studentSeq = students.length;
+        students.forEach(st => ensureStudentRecord(st.id));
+    }
+
+    /* ── Admin password (해시 저장, 기본값 0000은 최초 로그인용) ── */
+    async function hashPassword(pw) {
+        try {
+            if (window.crypto && crypto.subtle) {
+                const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('done-board:' + pw));
+                return 'sha256:' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        } catch(e) {}
+        let h = 0; const str = 'done-board:' + pw;
+        for (let i = 0; i < str.length; i++) { h = ((h << 5) - h + str.charCodeAt(i)) | 0; }
+        return 'weak:' + h;
+    }
+    async function changeAdminPassword() {
+        const cur = prompt('현재 관리자 암호를 입력하세요');
+        if (cur === null) return;
+        const stored = adminPwHash || await hashPassword('0000');
+        if (await hashPassword(cur) !== stored) { alert('현재 암호가 틀렸습니다.'); return; }
+        const next = prompt('새 관리자 암호를 입력하세요 (4자 이상)');
+        if (next === null) return;
+        if (next.trim().length < 4) { alert('암호는 4자 이상이어야 합니다.'); return; }
+        adminPwHash = await hashPassword(next);
+        saveData();
+        alert('관리자 암호가 변경되었습니다.');
+    }
+    /* ── Backup / Restore / CSV ── */
+    function downloadFile(name, content, type) {
+        try {
+            const blob = new Blob([content], { type: type + ';charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch(e) { alert('파일 다운로드에 실패했습니다.'); }
+    }
+    function exportBackup() {
+        downloadFile('done-board-backup-' + todayStr() + '.json', JSON.stringify(currentStateBlob(), null, 2), 'application/json');
+    }
+    function importBackup(ev) {
+        const file = ev.target.files && ev.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const obj = JSON.parse(reader.result);
+                if (!obj || obj.schemaVersion !== 2 || !Array.isArray(obj.students) || !Array.isArray(obj.tasks)) throw new Error('bad format');
+                if (!confirm('현재 데이터를 백업 파일 내용으로 교체할까요? 지금 데이터는 사라집니다.')) { ev.target.value = ''; return; }
+                applyStateBlob(obj);
+                sanitizeState();
+                saveData();
+                renderAdminTasks(); renderAdminStudents(); renderAdminOverview(); renderAdminByStudent();
+                alert('복원이 완료되었습니다.');
+            } catch(e) { alert('백업 파일을 읽을 수 없습니다. done 보드 백업 JSON 파일인지 확인해 주세요.'); }
+            ev.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+    function exportCSV() {
+        const rows = [['학생', '총포인트', '과제', '수행횟수', '과제포인트']];
+        students.forEach(st => {
+            const total = studentPoints[st.id] || 0;
+            const agg = {};
+            (studentHistory[st.id] || []).forEach(log => {
+                const k = normalizeKey(log.title);
+                if (!agg[k]) agg[k] = { title: log.title, count: 0, points: 0 };
+                agg[k].count += 1; agg[k].points += (log.points || 1);
+            });
+            const items = Object.values(agg);
+            if (!items.length) rows.push([st.name, total, '', 0, 0]);
+            else items.forEach(it => rows.push([st.name, total, it.title, it.count, it.points]));
+        });
+        const csv = '\uFEFF' + rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+        downloadFile('done-board-' + todayStr() + '.csv', csv, 'text/csv');
+    }
+    function resetDailyCompletions() {
+        if (!confirm('오늘 제출 기록만 초기화할까요? 포인트와 누적 기록은 유지됩니다.')) return;
+        tasks.forEach(t => completions[t.id] = []);
+        boardDate = todayStr();
+        saveData();
+        renderAdminOverview(); renderAdminByStudent();
+        alert('오늘 제출 기록이 초기화되었습니다.');
+    }
     
     function togglePointsVisibility() {
         isPointsVisible = document.getElementById('showPointsToggle').checked;
@@ -549,7 +789,7 @@
         if (!task) return;
         const col = document.getElementById(`task-col-${taskId}`);
         if (!col) return;
-        const cnt    = completions[taskId].length;
+        const cnt    = (completions[taskId] || []).length;
         const total  = students.length;
         const pct    = total ? cnt / total : 0;
         const da     = 2 * Math.PI * 18;
@@ -559,57 +799,48 @@
 
     function updateAllPointBadges() {
         document.querySelectorAll('.student-point-badge').forEach(badge => {
-            const name = badge.dataset.badgeStudent;
-            if(name) {
-                badge.textContent = studentPoints[name] || 0;
+            const sid = badge.dataset.badgeStudent;
+            if(sid) {
+                badge.textContent = studentPoints[sid] || 0;
             }
         });
     }
 
-    function createChipEl(taskId, name, sIdx) {
+    function createChipEl(taskId, studentId) {
         const chip = document.createElement('div');
-        chip.className = 'done-chip chip-enter'; 
-        chip.dataset.student = name;
-        const pts = studentPoints[name] || 0;
+        chip.className = 'done-chip chip-enter';
+        chip.dataset.student = studentId;
+        const pts = studentPoints[studentId] || 0;
         chip.innerHTML = `
-            <div class="student-point-badge" data-badge-student="${name}">${pts}</div>
-            <span class="done-emoji">${getEmoji(sIdx)}</span>
-            <span class="done-name">${name}</span>
+            <div class="student-point-badge" data-badge-student="${escapeAttr(studentId)}">${pts}</div>
+            <span class="done-emoji">${emojiOf(studentId)}</span>
+            <span class="done-name">${escapeHtml(nameOf(studentId))}</span>
         `;
-        chip.addEventListener('click', () => removeCompletion(taskId, name));
+        chip.addEventListener('click', () => removeCompletion(taskId, studentId));
         chip.addEventListener('animationend', () => chip.classList.remove('chip-enter'), { once: true });
         return chip;
     }
 
-    function addChipToBoard(taskId, name) {
+    function addChipToBoard(taskId, studentId) {
         const body = document.getElementById(`task-body-${taskId}`);
         if (!body) return;
-        const sIdx = students.indexOf(name);
-        body.appendChild(createChipEl(taskId, name, sIdx));
+        body.appendChild(createChipEl(taskId, studentId));
         updateProgress(taskId);
     }
 
-    function removeChipFromBoard(taskId, name) {
+    function removeChipFromBoard(taskId, studentId) {
         const body = document.getElementById(`task-body-${taskId}`);
         if (!body) return;
-        const chip = body.querySelector(`[data-student="${CSS.escape(name)}"]`);
+        const chip = body.querySelector(`[data-student="${CSS.escape(studentId)}"]`);
         if (chip) chip.remove();
         updateProgress(taskId);
     }
 
     /* ── Init ── */
     function init() {
-        tasks.forEach(t => { 
-            if (!completions[t.id]) completions[t.id] = []; 
-            if (!t.points) t.points = 1; 
-        });
-        for (let tid in completions) { completions[tid] = completions[tid].filter(s => students.includes(s)); }
-        
-        students.forEach(s => { 
-            if(studentPoints[s] === undefined) studentPoints[s] = 0; 
-            if(studentHistory[s] === undefined) studentHistory[s] = [];
-        });
-        
+        sanitizeState();
+        saveData();
+
         document.getElementById('showPointsToggle').checked = isPointsVisible;
         togglePointsVisibility();
 
@@ -617,6 +848,7 @@
         initFloatingTimer();
         initFloatingRoster();
         initEmojiPicker();
+        initAdminDelegation();
 
         const board = document.getElementById('taskGrid');
         board.addEventListener('wheel', (e) => {
@@ -627,12 +859,32 @@
         document.body.addEventListener('click', () => { try { if (audioCtx) audioCtx.resume(); } catch(e){} }, { once: true });
     }
 
+    /* ── Admin 이벤트 위임: 인라인 onclick에 사용자 데이터를 넣지 않는다 ── */
+    function initAdminDelegation() {
+        document.getElementById('adminTaskList').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-remove-task]');
+            if (btn) removeTask(btn.dataset.removeTask);
+        });
+        document.getElementById('adminStudentList').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-remove-student]');
+            if (btn) removeStudent(btn.dataset.removeStudent);
+        });
+        document.getElementById('adminByStudentContent').addEventListener('click', (e) => {
+            const adj = e.target.closest('[data-adjust]');
+            if (adj) { e.stopPropagation(); manualAdjustPoint(adj.dataset.studentId, parseInt(adj.dataset.adjust)); return; }
+            const header = e.target.closest('[data-toggle-student]');
+            if (header) toggleStudentDetails(header.dataset.toggleStudent);
+        });
+    }
+
     /* ── Mode Switch ── */
-    function switchMode(mode) {
+    async function switchMode(mode) {
         const floatingRoster = document.getElementById('floating-roster');
         if (mode === 'admin') {
-            const pwd = prompt("관리자 암호를 입력하세요 (기본: 0000)");
-            if (pwd !== '0000') { alert("암호가 틀렸습니다."); return; }
+            const pwd = prompt("관리자 암호를 입력하세요");
+            if (pwd === null) return;
+            const storedPw = adminPwHash || await hashPassword('0000');
+            if (await hashPassword(pwd) !== storedPw) { alert("암호가 틀렸습니다."); return; }
             document.getElementById('user-view').style.display  = 'none';
             document.getElementById('admin-view').style.display = 'flex';
             document.getElementById('btn-user').classList.remove('active');
@@ -678,7 +930,7 @@
         grid.innerHTML = '';
 
         tasks.forEach(task => {
-            const cnt    = completions[task.id].length;
+            const cnt    = (completions[task.id] || []).length;
             const total  = students.length;
             const pct    = total ? cnt / total : 0;
             const da     = 2 * Math.PI * 18;
@@ -689,9 +941,9 @@
             col.setAttribute('data-task-id', task.id);
             col.innerHTML = `
                 <div class="task-header">
-                    <div class="task-icon" style="background:${task.color}15; color:${task.color}">${task.icon}</div>
+                    <div class="task-icon" style="background:${escapeAttr(task.color)}15; color:${escapeAttr(task.color)}">${escapeHtml(task.icon)}</div>
                     <div class="task-info">
-                        <h3 class="task-title">${task.title} <span style="font-size:0.8rem; color:var(--ink-light); font-weight:normal; background:var(--paper); padding:2px 6px; border-radius:10px;">${task.points}점</span></h3>
+                        <h3 class="task-title">${escapeHtml(task.title)} <span style="font-size:0.8rem; color:var(--ink-light); font-weight:normal; background:var(--paper); padding:2px 6px; border-radius:10px;">${task.points}점</span></h3>
                     </div>
                     <div class="progress-wrap">
                         <svg class="progress-svg" viewBox="0 0 44 44">
@@ -707,18 +959,17 @@
             grid.appendChild(col);
 
             const body = col.querySelector(`#task-body-${task.id}`);
-            completions[task.id].forEach(name => {
-                const sIdx = students.indexOf(name);
+            (completions[task.id] || []).forEach(sid => {
                 const chip = document.createElement('div');
-                chip.className = 'done-chip'; 
-                chip.dataset.student = name;
-                const pts = studentPoints[name] || 0;
+                chip.className = 'done-chip';
+                chip.dataset.student = sid;
+                const pts = studentPoints[sid] || 0;
                 chip.innerHTML = `
-                    <div class="student-point-badge" data-badge-student="${name}">${pts}</div>
-                    <span class="done-emoji">${getEmoji(sIdx)}</span>
-                    <span class="done-name">${name}</span>
+                    <div class="student-point-badge" data-badge-student="${escapeAttr(sid)}">${pts}</div>
+                    <span class="done-emoji">${emojiOf(sid)}</span>
+                    <span class="done-name">${escapeHtml(nameOf(sid))}</span>
                 `;
-                chip.addEventListener('click', () => removeCompletion(task.id, name));
+                chip.addEventListener('click', () => removeCompletion(task.id, sid));
                 body.appendChild(chip);
             });
         });
@@ -733,19 +984,18 @@
         dock.innerHTML = '';
         document.getElementById('totalStudentsCount').textContent = `${students.length}명`;
 
-        students.forEach((name, idx) => {
+        students.forEach((st) => {
             const chip   = document.createElement('div');
             chip.className = 'draggable-chip';
-            const pastel = PASTELS[idx % PASTELS.length];
-            const pts = studentPoints[name] || 0;
+            const pts = studentPoints[st.id] || 0;
             chip.innerHTML = `
-                <div class="student-point-badge" data-badge-student="${name}">${pts}</div>
-                <div class="dock-emoji-wrap" style="background-color:${pastel};">
-                    <span class="dock-emoji">${getEmoji(idx)}</span>
+                <div class="student-point-badge" data-badge-student="${escapeAttr(st.id)}">${pts}</div>
+                <div class="dock-emoji-wrap" style="background-color:${escapeAttr(st.color)};">
+                    <span class="dock-emoji">${escapeHtml(st.emoji)}</span>
                 </div>
-                <span class="dock-name">${name}</span>
+                <span class="dock-name">${escapeHtml(st.name)}</span>
             `;
-            chip.addEventListener('pointerdown', (e) => startDrag(e, name, idx, chip, pastel));
+            chip.addEventListener('pointerdown', (e) => startDrag(e, st.id, chip));
             dock.appendChild(chip);
         });
     }
@@ -772,7 +1022,19 @@
             offsetY = e.clientY - rect.top;
             document.addEventListener('pointermove', onMove, { passive: false });
             document.addEventListener('pointerup',   onUp);
+            document.addEventListener('pointercancel', onCancel);
         });
+
+        function onCancel() {
+            isDragging = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            document.body.classList.remove('is-dragging');
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup',   onUp);
+            document.removeEventListener('pointercancel', onCancel);
+            rosterEl.style.transition = 'none';
+            adjustLayout();
+        }
 
         function onMove(e) {
             if (!isDragging) return;
@@ -800,6 +1062,7 @@
             document.body.classList.remove('is-dragging');
             document.removeEventListener('pointermove', onMove);
             document.removeEventListener('pointerup',   onUp);
+            document.removeEventListener('pointercancel', onCancel);
 
             rosterEl.style.transition = 'left 0.4s cubic-bezier(0.16,1,0.3,1), top 0.4s cubic-bezier(0.16,1,0.3,1), right 0.4s, bottom 0.4s, transform 0.4s';
             const ww = window.innerWidth, wh = window.innerHeight;
@@ -842,26 +1105,29 @@
     }
 
     /* ── Drag & Drop ── */
-    let ghost = null, dragStudentName = null, currentHoverCol = null;
+    let ghost = null, dragStudentId = null, currentHoverCol = null;
 
-    function startDrag(e, name, idx, sourceEl, pastelColor) {
+    function startDrag(e, studentId, sourceEl) {
         e.preventDefault();
-        dragStudentName = name;
+        const st = studentById(studentId);
+        if (!st) return;
+        dragStudentId = studentId;
         document.body.classList.add('is-dragging');
 
         ghost = document.createElement('div');
         ghost.className = 'ghost-chip';
         ghost.innerHTML = `
-            <div class="dock-emoji-wrap" style="background-color:${pastelColor}; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                <span class="dock-emoji" style="font-size:2rem; line-height:1;">${getEmoji(idx)}</span>
+            <div class="dock-emoji-wrap" style="background-color:${escapeAttr(st.color)}; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                <span class="dock-emoji" style="font-size:2rem; line-height:1;">${escapeHtml(st.emoji)}</span>
             </div>
-            <span style="font-weight:700; font-size:0.9rem;">${name}</span>
+            <span style="font-weight:700; font-size:0.9rem;">${escapeHtml(st.name)}</span>
         `;
         document.body.appendChild(ghost);
         moveGhost(e);
 
         document.addEventListener('pointermove', onDragMove, { passive: false });
         document.addEventListener('pointerup',   onDragEnd);
+        document.addEventListener('pointercancel', onDragCancel);
     }
 
     function moveGhost(e) {
@@ -883,62 +1149,81 @@
         }
     }
 
+    function onDragCancel() {
+        document.body.classList.remove('is-dragging');
+        document.removeEventListener('pointermove', onDragMove);
+        document.removeEventListener('pointerup',   onDragEnd);
+        document.removeEventListener('pointercancel', onDragCancel);
+        if (ghost) { ghost.remove(); ghost = null; }
+        if (currentHoverCol) { currentHoverCol.classList.remove('drag-over'); currentHoverCol = null; }
+        dragStudentId = null;
+    }
+
     function onDragEnd(e) {
         document.body.classList.remove('is-dragging');
         document.removeEventListener('pointermove', onDragMove);
         document.removeEventListener('pointerup',   onDragEnd);
+        document.removeEventListener('pointercancel', onDragCancel);
         if (ghost) { ghost.remove(); ghost = null; }
         if (currentHoverCol) {
             currentHoverCol.classList.remove('drag-over');
-            handleDrop(currentHoverCol.getAttribute('data-task-id'), dragStudentName);
+            handleDrop(currentHoverCol.getAttribute('data-task-id'), dragStudentId);
             currentHoverCol = null;
         }
-        dragStudentName = null;
+        dragStudentId = null;
     }
 
-    function handleDrop(taskId, studentName) {
+    function handleDrop(taskId, studentId) {
+        if (!studentById(studentId)) return;
+        ensureStudentRecord(studentId);
         if (!completions[taskId]) completions[taskId] = [];
-        if (completions[taskId].includes(studentName)) { playSound('error'); return; }
-        
+        if (completions[taskId].includes(studentId)) { playSound('error'); return; }
+
         const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
         const earnedPoints = task.points ? parseInt(task.points) : 1;
 
-        completions[taskId].push(studentName);
-        studentPoints[studentName] = (studentPoints[studentName] || 0) + earnedPoints; 
+        completions[taskId].push(studentId);
+        studentPoints[studentId] = (studentPoints[studentId] || 0) + earnedPoints;
 
-        if (!studentHistory[studentName].find(h => h.id === taskId)) {
-            studentHistory[studentName].push({
-                id: taskId,
-                title: task.title,
-                icon: task.icon,
-                points: earnedPoints
-            });
-        }
+        studentHistory[studentId].push({
+            taskId: taskId,
+            title: task.title,
+            icon: task.icon,
+            points: earnedPoints,
+            date: todayStr()
+        });
 
         saveData();
         playSound('drop');
-        addChipToBoard(taskId, studentName); 
-        updateAllPointBadges(); 
-        updateAdminStudentRow(studentName); 
+        addChipToBoard(taskId, studentId);
+        updateAllPointBadges();
+        updateAdminStudentRow(studentId);
         fireConfetti(taskId);
     }
 
-    function removeCompletion(taskId, studentName) {
-        if (!confirm(`${studentName} 학생의 기록을 취소할까요?`)) return;
-        
-        const task = tasks.find(t => t.id === taskId);
-        const lostPoints = task.points ? parseInt(task.points) : 1;
+    function removeCompletion(taskId, studentId) {
+        if (!confirm(`${nameOf(studentId)} 학생의 기록을 취소할까요?`)) return;
 
-        completions[taskId] = completions[taskId].filter(n => n !== studentName);
-        studentPoints[studentName] = Math.max(0, (studentPoints[studentName] || 0) - lostPoints); 
-        
-        studentHistory[studentName] = studentHistory[studentName].filter(h => h.id !== taskId);
+        ensureStudentRecord(studentId);
+        const task = tasks.find(t => t.id === taskId);
+        let lostPoints = task && task.points ? parseInt(task.points) : 1;
+        /* 오늘 날짜 + 이 과제에 해당하는 누적 기록 1건만 취소한다 (과거 누적은 건드리지 않음) */
+        const hist = studentHistory[studentId];
+        const today = todayStr();
+        let idx = -1;
+        for (let i = hist.length - 1; i >= 0; i--) { if (hist[i].taskId === taskId && hist[i].date === today) { idx = i; break; } }
+        if (idx === -1) { for (let i = hist.length - 1; i >= 0; i--) { if (hist[i].taskId === taskId) { idx = i; break; } } }
+        if (idx !== -1) { lostPoints = hist[idx].points || lostPoints; hist.splice(idx, 1); }
+
+        completions[taskId] = (completions[taskId] || []).filter(id => id !== studentId);
+        studentPoints[studentId] = Math.max(0, (studentPoints[studentId] || 0) - lostPoints);
 
         saveData();
         playSound('delete');
-        removeChipFromBoard(taskId, studentName);
-        updateAllPointBadges(); 
-        updateAdminStudentRow(studentName);
+        removeChipFromBoard(taskId, studentId);
+        updateAllPointBadges();
+        updateAdminStudentRow(studentId);
     }
 
     /* ── Confetti ── */
@@ -946,6 +1231,7 @@
         const canvas = document.getElementById(`canvas-${taskId}`);
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
+        if (!ctx) return;
         canvas.width  = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
         const particles = [];
@@ -991,9 +1277,10 @@
             offsetY = e.clientY - rect.top;
             document.addEventListener('pointermove', onMove, { passive: false });
             document.addEventListener('pointerup',   onUp);
+            document.addEventListener('pointercancel', onUp);
         });
         function onMove(e) { if (!isDragging) return; e.preventDefault(); timerEl.style.left = (e.clientX - offsetX) + 'px'; timerEl.style.top = (e.clientY - offsetY) + 'px'; }
-        function onUp()    { isDragging = false; document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); }
+        function onUp()    { isDragging = false; document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); document.removeEventListener('pointercancel', onUp); }
         updateTimerDisplay();
     }
 
@@ -1007,7 +1294,7 @@
     function setTimeManually() {
         if (isPlaying) toggleTimer();
         const input = prompt("설정할 시간을 분 단위로 입력하세요 (예: 15)", Math.floor(timeRemaining / 60));
-        if (input && !isNaN(input) && parseInt(input) > 0) { timeRemaining = parseInt(input) * 60; updateTimerDisplay(); }
+        if (input && !isNaN(input) && parseInt(input) > 0) { totalSeconds = timeRemaining = parseInt(input) * 60; updateTimerDisplay(); }
     }
     function adjustTime(min) { timeRemaining = Math.max(0, timeRemaining + min * 60); updateTimerDisplay(); }
     function toggleTimer() {
@@ -1032,25 +1319,26 @@
         clearInterval(timerInterval); isPlaying = false;
         document.getElementById('icon-play').style.display  = 'block';
         document.getElementById('icon-pause').style.display = 'none';
-        timeRemaining = 20 * 60; updateTimerDisplay();
+        timeRemaining = totalSeconds; updateTimerDisplay();
     }
 
     /* ── Admin: Tasks ── */
     function renderAdminTasks() {
         document.getElementById('adminTaskList').innerHTML = tasks.map(t => `
             <div class="task-edit-item">
-                <span class="icon-input">${t.icon}</span>
-                <span style="flex-grow:1; font-weight:700; font-size:1.05rem;">${t.title} <span style="font-size:0.8rem; color:var(--ink-light); margin-left:8px;">(${t.points}점)</span></span>
-                <button class="btn-danger-sm" onclick="removeTask('${t.id}')" title="삭제">✕</button>
+                <span class="icon-input">${escapeHtml(t.icon)}</span>
+                <span style="flex-grow:1; font-weight:700; font-size:1.05rem;">${escapeHtml(t.title)} <span style="font-size:0.8rem; color:var(--ink-light); margin-left:8px;">(${t.points}점)</span></span>
+                <button class="btn-danger-sm" data-remove-task="${escapeAttr(t.id)}" title="삭제">✕</button>
             </div>
         `).join('');
     }
     function addTask() {
         if (tasks.length >= 6) { alert("과제는 최대 6개까지 추가할 수 있습니다."); return; }
-        const title = document.getElementById('newTaskTitle').value.trim();
+        const title = normalizeName(document.getElementById('newTaskTitle').value);
         const icon  = document.getElementById('emojiSelectorBtn').textContent.trim() || '📝';
         const points = parseInt(document.getElementById('newTaskPoints').value) || 1; 
 
+        if (title && tasks.some(t => normalizeKey(t.title) === normalizeKey(title))) { alert("같은 이름의 과제가 이미 있습니다. (띄어쓰기·구두점만 다른 이름도 같은 과제로 봅니다)"); return; }
         if (title) {
             const newId = 't' + Date.now();
             tasks.push({ id: newId, title, icon, color: TASK_COLORS[tasks.length % TASK_COLORS.length], points: points });
@@ -1071,9 +1359,9 @@
     function resetAllData() {
         if (!confirm("모든 학생의 제출 기록과 누적 포인트를 0으로 초기화하시겠습니까? (과제와 명단은 유지됩니다)")) return;
         tasks.forEach(t => completions[t.id] = []);
-        students.forEach(s => {
-            studentPoints[s] = 0; 
-            studentHistory[s] = []; 
+        students.forEach(st => {
+            studentPoints[st.id] = 0;
+            studentHistory[st.id] = [];
         });
         saveData(); alert("모든 기록과 포인트가 초기화되었습니다!");
         renderAdminOverview(); renderAdminByStudent();
@@ -1084,31 +1372,36 @@
 
     /* ── Admin: Students ── */
     function renderAdminStudents() {
-        document.getElementById('adminStudentList').innerHTML = students.map((name, idx) => `
+        document.getElementById('adminStudentList').innerHTML = students.map((st) => `
             <div style="background:var(--paper); border:1px solid var(--border); padding:8px 14px; border-radius:100px; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:8px;">
-                ${getEmoji(idx)} ${name}
-                <span style="color:var(--accent); cursor:pointer; margin-left:4px;" onclick="removeStudent(${idx})">✕</span>
+                ${escapeHtml(st.emoji)} ${escapeHtml(st.name)}
+                <span style="color:var(--accent); cursor:pointer; margin-left:4px;" data-remove-student="${escapeAttr(st.id)}">✕</span>
             </div>
         `).join('');
     }
     function addStudent() {
-        const input = document.getElementById('newStudentName'), name = input.value.trim();
-        if (name) {
-            students.push(name); 
-            studentPoints[name] = 0; 
-            studentHistory[name] = [];
-            input.value = '';
-            saveData(); renderAdminStudents();
-            if (document.getElementById('user-view').style.display !== 'none') renderDock();
+        const input = document.getElementById('newStudentName'), name = normalizeName(input.value);
+        if (!name) return;
+        if (students.some(st => st.name === name)) {
+            if (!confirm("같은 이름의 학생이 이미 있습니다. 동명이인으로 추가할까요? (이모지가 달라 구분됩니다)")) return;
         }
+        const seq = studentSeq;
+        const st = { id: genStudentId(), name, emoji: EMOJIS[seq % EMOJIS.length], color: PASTELS[seq % PASTELS.length] };
+        students.push(st);
+        studentPoints[st.id] = 0;
+        studentHistory[st.id] = [];
+        input.value = '';
+        saveData(); renderAdminStudents();
+        if (document.getElementById('user-view').style.display !== 'none') renderDock();
     }
-    function removeStudent(idx) {
+    function removeStudent(studentId) {
+        const st = studentById(studentId);
+        if (!st) return;
         if (!confirm("이 학생을 명단에서 삭제할까요?")) return;
-        const name = students[idx];
-        students.splice(idx, 1);
-        delete studentPoints[name]; 
-        delete studentHistory[name];
-        for (let tid in completions) completions[tid] = completions[tid].filter(s => s !== name);
+        students = students.filter(x => x.id !== studentId);
+        delete studentPoints[studentId];
+        delete studentHistory[studentId];
+        for (let tid in completions) { if (Array.isArray(completions[tid])) completions[tid] = completions[tid].filter(id => id !== studentId); }
         saveData(); renderAdminStudents();
         if (document.getElementById('user-view').style.display !== 'none') renderUserView();
     }
@@ -1116,46 +1409,46 @@
     /* ── Admin: Overview & ByStudent ── */
     function renderAdminOverview() {
         document.getElementById('adminOverviewContent').innerHTML = tasks.map(task => {
-            const done    = completions[task.id];
-            const missing = students.filter(s => !done.includes(s));
+            const done    = completions[task.id] || [];
+            const missing = students.filter(st => !done.includes(st.id));
             return `
                 <div class="insight-box">
-                    <div class="insight-header">${task.icon} ${task.title}</div>
+                    <div class="insight-header">${escapeHtml(task.icon)} ${escapeHtml(task.title)}</div>
                     <div class="status-section">
                         <div class="status-title" style="color:var(--success)">✅ 제출완료 (${done.length}명)</div>
-                        <div class="chip-wrap">${done.length ? done.map(s => `<span class="chip done">${s}</span>`).join('') : '<span style="color:var(--ink-light)">아직 제출자가 없습니다.</span>'}</div>
+                        <div class="chip-wrap">${done.length ? done.map(sid => `<span class="chip done">${escapeHtml(nameOf(sid))}</span>`).join('') : '<span style="color:var(--ink-light)">아직 제출자가 없습니다.</span>'}</div>
                     </div>
                     <div class="status-section">
                         <div class="status-title" style="color:var(--accent)">🚨 미제출 (${missing.length}명)</div>
-                        <div class="chip-wrap">${missing.length ? missing.map(s => `<span class="chip missing">${s}</span>`).join('') : '<span style="color:var(--success); font-weight:bold;">🎉 전원 제출 완료!</span>'}</div>
+                        <div class="chip-wrap">${missing.length ? missing.map(st => `<span class="chip missing">${escapeHtml(st.name)}</span>`).join('') : '<span style="color:var(--success); font-weight:bold;">🎉 전원 제출 완료!</span>'}</div>
                     </div>
                 </div>
             `;
         }).join('');
     }
 
-    function toggleStudentDetails(idx) {
-        const header = document.getElementById(`sr-header-${idx}`);
-        const body = document.getElementById(`sr-body-${idx}`);
+    function toggleStudentDetails(studentId) {
+        const header = document.getElementById(`sr-header-${studentId}`);
+        const body = document.getElementById(`sr-body-${studentId}`);
+        if (!header || !body) return;
         header.classList.toggle('open');
         body.classList.toggle('open');
     }
 
     /* 🌟 190일 대비 누적 합산 로직 (정규화된 키로 스마트 그룹핑) */
-    function generateStudentCardHTML(student, idx) {
+    function generateStudentCardHTML(student) {
         const badges = tasks.map(task => {
-            const isDone = completions[task.id].includes(student);
-            return `<span class="badge ${isDone ? 'done' : 'missing'}">${task.icon} <span>${task.title}</span> <strong style="margin-left:4px;">${isDone ? 'O' : 'X'}</strong></span>`;
+            const isDone = (completions[task.id] || []).includes(student.id);
+            return `<span class="badge ${isDone ? 'done' : 'missing'}">${escapeHtml(task.icon)} <span>${escapeHtml(task.title)}</span> <strong style="margin-left:4px;">${isDone ? 'O' : 'X'}</strong></span>`;
         }).join('');
         
-        const currentPoints = studentPoints[student] || 0;
-        const historyLogs = studentHistory[student] || []; 
-        const safeName = student.replace(/\s/g, '');
+        const currentPoints = studentPoints[student.id] || 0;
+        const historyLogs = studentHistory[student.id] || [];
 
         // 🌟 정규화 그룹핑 로직 (공백 및 구두점 무시)
         const aggregated = {};
         historyLogs.forEach(log => {
-            const normalizedKey = log.title.replace(/[\s.,!?~()]+/g, '').toLowerCase();
+            const normalizedKey = normalizeKey(log.title);
             
             if(!aggregated[normalizedKey]) {
                 aggregated[normalizedKey] = {
@@ -1182,8 +1475,8 @@
         if (aggregatedArray.length > 0) {
             historyItemsHTML = `<div class="task-history-list">` + aggregatedArray.map(item => `
                 <div class="task-history-item">
-                    <span style="font-size:1.1rem;">${item.icon}</span>
-                    <span>${item.title}</span>
+                    <span style="font-size:1.1rem;">${escapeHtml(item.icon)}</span>
+                    <span>${escapeHtml(item.title)}</span>
                     <span style="color:var(--navy); font-weight:800; margin-left:4px;">${item.count}회</span>
                     <span style="color:var(--accent); font-size:0.8rem; margin-left:2px;">(${item.points}P)</span>
                 </div>
@@ -1191,17 +1484,17 @@
         }
 
         return `
-            <div class="sr-header" id="sr-header-${idx}" onclick="toggleStudentDetails(${idx})">
-                <div class="sr-profile">${getEmoji(idx)} ${student}</div>
-                <div class="sr-points-ctrl" onclick="event.stopPropagation()">
-                    <button onclick="manualAdjustPoint(event, '${student}', -1)">-</button>
-                    <span class="pt-display-${safeName}">${currentPoints}</span>
-                    <button onclick="manualAdjustPoint(event, '${student}', 1)">+</button>
+            <div class="sr-header" id="sr-header-${student.id}" data-toggle-student="${escapeAttr(student.id)}">
+                <div class="sr-profile">${escapeHtml(student.emoji)} ${escapeHtml(student.name)}</div>
+                <div class="sr-points-ctrl">
+                    <button data-adjust="-1" data-student-id="${escapeAttr(student.id)}">-</button>
+                    <span>${currentPoints}</span>
+                    <button data-adjust="1" data-student-id="${escapeAttr(student.id)}">+</button>
                 </div>
                 <div class="sr-badges">${badges}</div>
                 <div class="sr-chevron">▼</div>
             </div>
-            <div class="sr-body" id="sr-body-${idx}">
+            <div class="sr-body" id="sr-body-${student.id}">
                 <h4 style="margin: 0 0 12px 0; color: var(--navy); font-size: 0.95rem; border-bottom: 2px dashed var(--border); padding-bottom: 8px;">
                     🎁 누적 과제 수행 통계 <span style="font-weight:normal; font-size:0.8rem; color:var(--ink-light);">(과제를 삭제해도 영구 보존 / 횟수 자동 합산)</span>
                 </h4>
@@ -1213,36 +1506,36 @@
 
     function renderAdminByStudent() {
         const container = document.getElementById('adminByStudentContent');
-        container.innerHTML = students.map((student, idx) => {
-            return `<div class="student-record-card" id="student-card-${idx}">
-                        ${generateStudentCardHTML(student, idx)}
+        container.innerHTML = students.map((student) => {
+            return `<div class="student-record-card" id="student-card-${student.id}">
+                        ${generateStudentCardHTML(student)}
                     </div>`;
         }).join('');
     }
 
-    function updateAdminStudentRow(studentName) {
-        const idx = students.indexOf(studentName);
-        if (idx === -1) return;
-        const card = document.getElementById(`student-card-${idx}`);
+    function updateAdminStudentRow(studentId) {
+        const student = studentById(studentId);
+        if (!student) return;
+        const card = document.getElementById(`student-card-${studentId}`);
         if (!card) return;
-        
-        const header = document.getElementById(`sr-header-${idx}`);
+
+        const header = document.getElementById(`sr-header-${studentId}`);
         const isOpen = header && header.classList.contains('open');
 
-        card.innerHTML = generateStudentCardHTML(studentName, idx);
+        card.innerHTML = generateStudentCardHTML(student);
 
         if (isOpen) {
-            document.getElementById(`sr-header-${idx}`).classList.add('open');
-            document.getElementById(`sr-body-${idx}`).classList.add('open');
+            document.getElementById(`sr-header-${studentId}`).classList.add('open');
+            document.getElementById(`sr-body-${studentId}`).classList.add('open');
         }
     }
 
-    function manualAdjustPoint(e, studentName, amount) {
-        if(e) e.stopPropagation();
-        studentPoints[studentName] = Math.max(0, (studentPoints[studentName] || 0) + amount);
+    function manualAdjustPoint(studentId, amount) {
+        if (!studentById(studentId)) return;
+        studentPoints[studentId] = Math.max(0, (studentPoints[studentId] || 0) + amount);
         saveData();
-        
-        updateAdminStudentRow(studentName);
+
+        updateAdminStudentRow(studentId);
         updateAllPointBadges();
     }
 
