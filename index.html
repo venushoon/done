@@ -63,6 +63,7 @@
     
     .mode-toggle { display: flex; background: var(--paper); border-radius: 100px; padding: 4px; border: 1px solid var(--border); }
 
+    .header-right { display: flex; align-items: center; gap: 22px; flex-shrink: 0; }
     .datetime-display { text-align: center; line-height: 1.15; flex-shrink: 0; }
     .datetime-display .date-line { font-size: 0.85rem; font-weight: 700; color: var(--ink-light); }
     .datetime-display .time-line { font-family: 'DM Sans', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
@@ -350,6 +351,7 @@
                 <p>스스로 체크하는 우리 반 과제 관리</p>
             </div>
         </div>
+        <div class="header-right">
         <div class="datetime-display" title="오늘 날짜와 현재 시간">
             <div class="date-line" id="dateLine"></div>
             <div class="time-line" id="timeLine">--:--:--</div>
@@ -357,6 +359,7 @@
         <div class="mode-toggle">
             <button class="mode-btn active" onclick="switchMode('user')" id="btn-user">🎓 학생 보드</button>
             <button class="mode-btn" onclick="switchMode('admin')" id="btn-admin">🔒 교사 관리자</button>
+        </div>
         </div>
     </header>
 
