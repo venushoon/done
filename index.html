@@ -464,6 +464,7 @@
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
             if (type === 'alert') {
                 [0, 0.28, 0.56].forEach(off => {
                     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
@@ -476,7 +477,6 @@
             }
             const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
             if (type === 'drop') {
                 osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1500, now + 0.1);
                 gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
@@ -710,6 +710,9 @@
                 applyStateBlob(obj);
                 sanitizeState();
                 saveData();
+                const tg = document.getElementById('showPointsToggle');
+                if (tg) tg.checked = isPointsVisible;
+                document.body.classList.toggle('show-points', isPointsVisible);
                 renderAdminTasks(); renderAdminStudents(); renderAdminOverview(); renderAdminByStudent();
                 alert('복원이 완료되었습니다.');
             } catch(e) { alert('백업 파일을 읽을 수 없습니다. done 보드 백업 JSON 파일인지 확인해 주세요.'); }
@@ -806,9 +809,9 @@
         });
     }
 
-    function createChipEl(taskId, studentId) {
+    function createChipEl(taskId, studentId, animate = true) {
         const chip = document.createElement('div');
-        chip.className = 'done-chip chip-enter';
+        chip.className = animate ? 'done-chip chip-enter' : 'done-chip';
         chip.dataset.student = studentId;
         const pts = studentPoints[studentId] || 0;
         chip.innerHTML = `
@@ -960,17 +963,7 @@
 
             const body = col.querySelector(`#task-body-${task.id}`);
             (completions[task.id] || []).forEach(sid => {
-                const chip = document.createElement('div');
-                chip.className = 'done-chip';
-                chip.dataset.student = sid;
-                const pts = studentPoints[sid] || 0;
-                chip.innerHTML = `
-                    <div class="student-point-badge" data-badge-student="${escapeAttr(sid)}">${pts}</div>
-                    <span class="done-emoji">${emojiOf(sid)}</span>
-                    <span class="done-name">${escapeHtml(nameOf(sid))}</span>
-                `;
-                chip.addEventListener('click', () => removeCompletion(task.id, sid));
-                body.appendChild(chip);
+                body.appendChild(createChipEl(task.id, sid, false));
             });
         });
 
